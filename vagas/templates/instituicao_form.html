@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ShelterSync - Formulario de Unidade</title>
+</head>
+<body>
+    <h2>{% if object %}Editar Unidade {% else %}Cadastrar Nova Unidade {% endif %}</h2>
+    <hr>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+
+        <div style="background: #e2e3e5; padding: 10px; margin: 10px 0;">
+            <strong>Nota:</strong> cada instituição deve ter um CNPJ único.
+        </div>
+
+        <button type="submit" style="background: blue; color: white; padding: 8px 15px;">Salvar Unidade</button>
+        <a href="{% url 'instituicao_list' %}">Cancelar</a>
+    </form>
+</body>
+</html>

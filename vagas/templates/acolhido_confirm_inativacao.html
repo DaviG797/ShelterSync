@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Inativação</title>
+</head>
+<body>
+    <div style="border: 1px solid red; padding: 20px; max-width: 450px; margin: 50px auto; text-align: center;">
+        <h2 style="color: red;">Inativação</h2>
+        <p>Deseja desativar o registro de <strong>{{ object.nome }}</strong>?</p>
+        <p><small><em>(A exclusão física é proibida pela regra para fins de auditoria).</em></small></p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background: red; color: white; padding: 10px;">Sim, Confirmar Inativação</button>
+            <a href="{% url 'acolhido_list' %}" style="margin-left: 10px;">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>

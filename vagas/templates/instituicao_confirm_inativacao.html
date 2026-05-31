@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Inativação da Instituição</title>
+</head>
+<body>
+    <div style="border: 1px solid red; padding: 20px; max-width: 450px; margin: 50px auto; text-align: center;">
+        <h2 style="color: red;">Inativação de Instituição</h2>
+        <p>Tem certeza de que deseja desativar o registro da instituição: <strong>{{ object.nome }}</strong>?</p>
+        <p><small>A operação falhará automaticamente se houver acolhidos abrigados nela.</small></p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background: red; color: white; padding: 10px;">Confirmar e Inativar</button>
+            <a href="{% url 'instituicao_list' %}" style="margin-left: 10px;">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>

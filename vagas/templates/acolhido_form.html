@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ShelterSync - Formulário</title>
+</head>
+<body>
+    <h2>{% if object %}Editar Acolhido{% else %}Cadastrar Acolhido{% endif %}</h2>
+    <hr>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+
+        <div style="background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107;">
+            <strong>Nota:</strong> O campo "Histórico de Saúde" é criptografado automaticamente. 
+            Se marcar que não possui documentos, preencha a justificativa.
+        </div>
+
+        <button type="submit" style="background: green; color: white; padding: 8px 15px;">Confirmar e Salvar</button>
+        <a href="{% url 'acolhido_list' %}">Cancelar</a>
+    </form>
+
+    <script>
+        const docInput = document.getElementById('id_documentacao');
+        const justInput = document.getElementById('id_justificativa_sem_doc');
+        
+        if(docInput && justInput) {
+            // Esconde a justificativa por padrão se o documento já estiver preenchido
+            justInput.parentElement.style.display = docInput.value ? 'none' : 'block';
+            
+            docInput.addEventListener('input', function() {
+                justInput.parentElement.style.display = this.value ? 'none' : 'block';
+                if (!this.value) justInput.setAttribute('required', 'required');
+                else justInput.removeAttribute('required');
+            });
+        }
+    </script>
+</body>
+</html>

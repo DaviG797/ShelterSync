@@ -16,7 +16,31 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from vagas.views import (
+    AcolhidoListView,
+    AcolhidoCreateView,
+    AcolhidoUpdateView,
+    AcolhidoInativacaoView,
+    InstituicaoListView,
+    InstituicaoCreateView,
+    InstituicaoUpdateView,
+    InstituicaoInativacaoView,
+    InstituicaoAtivacaoView,
+    AcolhidoAtivacaoView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    #rotas para Acolhidos
+    path('acolhidos/', AcolhidoListView.as_view(), name='acolhido_list'),
+    path('acolhidos/create/', AcolhidoCreateView.as_view(), name='acolhido_create'),
+    path('acolhidos/<int:pk>/update/', AcolhidoUpdateView.as_view(), name='acolhido_update'),
+    path('acolhidos/<int:pk>/inativar/', AcolhidoInativacaoView.as_view(), name='acolhido_inativar'),
+    #rotas para Instituicoes genéricas
+    path('instituicoes/', InstituicaoListView.as_view(), name='instituicao_list'),
+    path('instituicoes/create/', InstituicaoCreateView.as_view(), name='instituicao_create'),
+    path('instituicoes/<int:pk>/update/', InstituicaoUpdateView.as_view(), name='instituicao_update'),
+    path('instituicoes/<int:pk>/inativar/', InstituicaoInativacaoView.as_view(), name='instituicao_inativar'),
+    path('instituicoes/<int:pk>/ativar/', InstituicaoAtivacaoView.as_view(), name='instituicao_ativar'),
+    path('acolhidos/<int:pk>/ativar/', AcolhidoAtivacaoView.as_view(), name='acolhido_ativar'),
 ]

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Reativação da Instituição</title>
+</head>
+<body>
+    <div style="border: 1px solid green; padding: 20px; max-width: 450px; margin: 50px auto; text-align: center;">
+        <h2 style="color: green;">Reativação de Instituição</h2>
+        <p>Tem certeza de que deseja reativar o registro da instituição: <strong>{{ object.nome }}</strong>?</p>
+        <p><small>Ao confirmar, ela voltará a ficar disponível para abrigar novos acolhidos.</small></p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background: green; color: white; padding: 10px; border: none; cursor: pointer; font-weight: bold;">Confirmar Ativação</button>
+            <a href="{% url 'instituicao_list' %}" style="margin-left: 10px;">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>

@@ -11,6 +11,7 @@ class Instituicao(models.Model):
 
     def __str__(self): #Retorna o nome da instituição para não mostrar "instituição object (1)" no admin.
         return self.nome
+    
 class Acolhido(models.Model):
     nome = models.CharField(max_length=100) # D-01 (Nome do acolhido)
     documentacao = models.CharField(max_length=50, blank=True, default="") # D-02 + RN-15 (Documentação do acolhido, ex: RG, CPF)
@@ -25,6 +26,13 @@ class Acolhido(models.Model):
     orientacao_sexual = models.CharField(max_length=30, blank=True, default="") # D-10 (Orientação sexual do acolhido, se conhecido)
     motivo_acolhimento = models.TextField() # D-11 (Motivo do acolhimento do indivíduo)
     ativo = models.BooleanField(default=True) # RF-02 (Inativar acolhido)
+    instituicao_atual = models.ForeignKey(
+        Instituicao,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='acolhidos'
+    )
 
     def __str__(self): #Retorna o nome do acolhido para não mostrar "acolhido object (1)" no admin.
         return self.nome

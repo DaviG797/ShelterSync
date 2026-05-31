@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ShelterSync - Cadastro de Acolhidos</title>
+</head>
+<body>
+    <h1>ShelterSync - Painel de Acolhidos</h1>
+    <a href="{% url 'acolhido_create' %}">Adicionar Novo Acolhido</a> | 
+    <a href="{% url 'instituicao_list' %}">Ver Unidades de Instituição</a>
+    <hr>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background: #f8d7da; color: #842029; padding: 10px; margin-bottom: 10px;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr>
+                <th>Nome do Acolhido</th>
+                <th>Documentação</th>
+                <th>Gênero</th>
+                <th>Instituição Atual</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for acolhido in acolhidos %}
+            <tr {% if not acolhido.ativo %}style="opacity: 0.6; background-color: #f8d7da;"{% endif %}>
+                <td><strong>{{ acolhido.nome }}</strong></td>
+                <td>
+                    {% if acolhido.documentacao %}
+                        {{ acolhido.documentacao }}
+                    {% else %}
+                        <span style="color: orange;">Sem Doc.</span>
+                    {% endif %}
+                </td>
+                <td>{{ acolhido.genero }}</td>
+                <td>{{ acolhido.instituicao_atual.nome }}</td>
+                <td>
+                    {% if acolhido.ativo %}
+                        <a href="{% url 'acolhido_update' acolhido.pk %}">Editar</a> | 
+                        <a href="{% url 'acolhido_inativar' acolhido.pk %}" style="color: red;">Inativar</a>
+                    {% else %}
+                        <a href="{% url 'acolhido_ativar' acolhido.pk %}" style="color: green; font-weight: bold;">Ativar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Nenhum cidadão acolhido no sistema.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

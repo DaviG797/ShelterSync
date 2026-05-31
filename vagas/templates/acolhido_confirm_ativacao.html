@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Reativação do Acolhido</title>
+</head>
+<body>
+    <div style="border: 1px solid green; padding: 20px; max-width: 450px; margin: 50px auto; text-align: center;">
+        <h2 style="color: green;">Reativação de Acolhido</h2>
+        <p>Tem certeza de que deseja reativar o registro de: <strong>{{ object.nome }}</strong>?</p>
+        <p><small>Ao confirmar, o cidadão voltará a constar como ativo no sistema.</small></p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" style="background: green; color: white; padding: 10px; border: none; cursor: pointer; font-weight: bold;">Confirmar Ativação</button>
+            <a href="{% url 'acolhido_list' %}" style="margin-left: 10px;">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html>

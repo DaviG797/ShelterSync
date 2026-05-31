@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ShelterSync - Unidades de Instituição</title>
+</head>
+<body>
+    <h1>ShelterSync - Unidades de Instituição</h1>
+    <a href="{% url 'instituicao_create' %}">Cadastrar Nova Unidade</a> | 
+    <a href="{% url 'acolhido_list' %}">Voltar para Acolhidos</a>
+    <hr>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background: #f8d7da; color: #842029; padding: 10px; margin-bottom: 10px;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="GET">
+        <input type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar instituição por nome...">
+        <button type="submit">Pesquisar</button>
+    </form>
+
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr>
+                <th>Nome da Instituição</th>
+                <th>Capacidade</th>
+                <th>Perfil / Categorização</th>
+                <th>CNPJ</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inst in instituicoes %}
+            <tr {% if not inst.ativo %}style="opacity: 0.6; background-color: #f8d7da;"{% endif %}>
+                <td><strong>{{ inst.nome }}</strong></td>
+                <td>{{ inst.capacidade_total }} vagas</td>
+                <td>{{ inst.categorizacao }}</td>
+                <td>{{ inst.cnpj }}</td>
+                <td>
+                    {% if inst.ativo %}
+                        <a href="{% url 'instituicao_update' inst.pk %}">Editar</a> | 
+                        <a href="{% url 'instituicao_inativar' inst.pk %}" style="color: red;">Inativar</a>
+                    {% else %}
+                        <a href="{% url 'instituicao_ativar' inst.pk %}" style="color: green; font-weight: bold;">Ativar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Nenhuma unidade institucional cadastrada.</td></tr>
+            {% endfor %}
