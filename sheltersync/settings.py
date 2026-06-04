@@ -11,16 +11,21 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+env = environ.Env()
+environ.Env.read_env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=*aq9wjo&2*mzl9rtd!x+t549qnm*=-oi^erc8ektk*61(zevf'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -76,11 +81,11 @@ WSGI_APPLICATION = 'sheltersync.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sheltersync_db',
-        'USER': 'postgres',
-        'PASSWORD': 'sql12345',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': 'pg-dee9b2d-sheltersync.i.aivencloud.com',
+        'PORT': '22372',
     }
 }
 
