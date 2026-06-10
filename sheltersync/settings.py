@@ -126,3 +126,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Onde o Django procura a tela de login se alguém tentar acessar a página protegida
+LOGIN_URL = 'login'
+
+# Para onde o usuário vai logo após fazer login com sucesso
+LOGIN_REDIRECT_URL = 'acolhido_list'
+
+# Para onde o usuário vai após fazer logout
+LOGOUT_REDIRECT_URL = 'login'

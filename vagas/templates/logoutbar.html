@@ -1,0 +1,12 @@
+<div style="background-color: #f8f9fa; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;">
+    <span>Sistema de Acolhimento</span>
+    <div>
+        <span>Olá, <strong>{{ request.user.username }}</strong>!</span>
+        <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 15px;">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">
+                Sair
+            </button>
+        </form>
+    </div>
+</div>

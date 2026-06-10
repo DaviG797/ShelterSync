@@ -6,11 +6,21 @@ from .forms import AcolhidoForm, InstituicaoForm
 from django.http import HttpResponseRedirect #está aqui para caos seja preciso.
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
+class GroupRequiredMixin(UserPassesTestMixin):
+    allowed_groups = []
+
+    def test_func(self):
+        # Superusuários sempre passam
+        if self.request.user.is_superuser:
+            return True
+        # Verifica se o usuário pertence a um dos grupos permitidos
+        return self.request.user.groups.filter(name__in=self.allowed_groups).exists()
 
 # CRUD PARA ACOLHIDO--------------------------------------------------------
 #1 - Listagem de Acolhidos
-class AcolhidoListView(ListView):
+class AcolhidoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
     model = Acolhido
     template_name = 'acolhido_list.html'
     context_object_name = 'acolhidos'
@@ -20,24 +30,27 @@ class AcolhidoListView(ListView):
         if nome_filtro:
             return Acolhido.objects.filter(nome__icontains=nome_filtro)
         return Acolhido._base_manager.all()
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
 #2 - Criação de Acolhidos
-class AcolhidoCreateView(CreateView):
+class AcolhidoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     model = Acolhido
     form_class = AcolhidoForm
     template_name = 'acolhido_form.html'
     success_url = reverse_lazy('acolhido_list')
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
 #3 - Edição de Acolhidos
-class AcolhidoUpdateView(UpdateView):
+class AcolhidoUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Acolhido
     form_class = AcolhidoForm
     template_name = 'acolhido_form.html'
     success_url = reverse_lazy('acolhido_list')
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
 #4 - Inativação de Acolhidos
 # Para converter o delete em inativar atraves de False, mantendo o registro no banco de dados, de acordo com o documento de requisitos.
-class AcolhidoInativacaoView(UpdateView):
+class AcolhidoInativacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Acolhido
     template_name = 'acolhido_confirm_inativacao.html'
     success_url = reverse_lazy('acolhido_list')
@@ -54,9 +67,10 @@ class AcolhidoInativacaoView(UpdateView):
 
         messages.success(request, f'Acolhido "{self.object.nome}" inativado com sucesso.')
         return redirect('acolhido_list')
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
         
 #5 - Reativação de Acolhidos
-class AcolhidoAtivacaoView(UpdateView):
+class AcolhidoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Acolhido
     template_name = 'acolhido_confirm_ativacao.html'
     success_url = reverse_lazy('acolhido_list')
@@ -72,11 +86,12 @@ class AcolhidoAtivacaoView(UpdateView):
         self.object.save()
         messages.success(request, f'Acolhido "{self.object.nome}" reativado com sucesso!')
         return redirect('acolhido_list')
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
 
 #CRUD PARA INSTITUIÇÃO-------------------------------------------------------
 #6 - Listagem de Instituições
-class InstituicaoListView(ListView):
+class InstituicaoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
     model = Instituicao
     template_name = 'instituicao_list.html'
     context_object_name = 'instituicoes'
@@ -86,23 +101,26 @@ class InstituicaoListView(ListView):
         if nome_filtro:
             return Instituicao.objects.filter(nome__icontains=nome_filtro)
         return Instituicao._base_manager.all()
+    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
     
 #7 - Criação de Instituições
-class InstituicaoCreateView(CreateView):
+class InstituicaoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     model = Instituicao
     form_class = InstituicaoForm
     template_name = 'instituicao_form.html'
     success_url = reverse_lazy('instituicao_list')
+    allowed_groups = ['Secretaria Social']
 
 #8 - Edição de Instituições
-class InstituicaoUpdateView(UpdateView):
+class InstituicaoUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Instituicao
     form_class = InstituicaoForm
     template_name = 'instituicao_form.html'
     success_url = reverse_lazy('instituicao_list')
+    allowed_groups = ['Secretaria Social']
     
 #9 - Inativação de Instituições
-class InstituicaoInativacaoView(UpdateView):
+class InstituicaoInativacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Instituicao
     template_name = 'instituicao_confirm_inativacao.html'
     success_url = reverse_lazy('instituicao_list')
@@ -125,9 +143,10 @@ class InstituicaoInativacaoView(UpdateView):
 
             messages.success(request, f'Instituição "{self.object.nome}" inativada com sucesso.')
             return redirect('instituicao_list')
+    allowed_groups = ['Secretaria Social']
 
 #10 - Reativação de Instituições
-class InstituicaoAtivacaoView(UpdateView):
+class InstituicaoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Instituicao
     template_name = 'instituicao_confirm_ativacao.html'
     success_url = reverse_lazy('instituicao_list')
@@ -144,3 +163,4 @@ class InstituicaoAtivacaoView(UpdateView):
 
         messages.success(request, f'Instituição "{self.object.nome}" reativada com sucesso!')
         return redirect('instituicao_list')
+    allowed_groups = ['Secretaria Social']
