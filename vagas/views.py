@@ -8,6 +8,9 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
+from rest_framework import viewsets
+from .serializers import InstituicaoSerializer, AcolhidoSerializer
+
 class GroupRequiredMixin(UserPassesTestMixin):
     allowed_groups = []
 
@@ -164,3 +167,13 @@ class InstituicaoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView
         messages.success(request, f'Instituição "{self.object.nome}" reativada com sucesso!')
         return redirect('instituicao_list')
     allowed_groups = ['Secretaria Social']
+
+#--- APIs PARA O REACT ---
+
+class InstituicaoViewSet(viewsets.ModelViewSet):
+    queryset = Instituicao.objects.all()
+    serializer_class = InstituicaoSerializer
+
+class AcolhidoViewSet(viewsets.ModelViewSet):
+    queryset = Acolhido.objects.all()
+    serializer_class = AcolhidoSerializer

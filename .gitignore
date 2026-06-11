@@ -1,3 +1,18 @@
+# token do bd
 ca.pem
+
+# backup
 backup.json
+
+# ambiente virtual
+venv/
+env/
+
+# arquivos de configuração de ambiente
 .env
+
+# cache do python
+__pycache__/
+*.pyc
+*.pyo
+*pyd

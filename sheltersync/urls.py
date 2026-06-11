@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
-from django.urls import path
 from vagas.views import (
     AcolhidoListView,
     AcolhidoCreateView,
@@ -30,7 +29,17 @@ from vagas.views import (
     AcolhidoAtivacaoView,
 )
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from vagas.views import InstituicaoViewSet, AcolhidoViewSet
+
+router = DefaultRouter()
+router.register(r'instituicoes-api', InstituicaoViewSet)
+router.register(r'acolhidos-api', AcolhidoViewSet)
+
 urlpatterns = [
+    path('api/', include(router.urls)),
+
     path('admin/', admin.site.urls),
     #rotas para Acolhidos
     path('acolhidos/', AcolhidoListView.as_view(), name='acolhido_list'),
