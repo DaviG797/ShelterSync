@@ -5,14 +5,43 @@ ca.pem
 backup.json
 
 # ambiente virtual
-venv/
-env/
+venv/*
+env/*
 
 # arquivos de configuração de ambiente
 .env
 
 # cache do python
-__pycache__/
+__pycache__/*
 *.pyc
 *.pyo
 *pyd
+
+# arquivos de log
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist
+dist-ssr
+*.local
+
+# arquivos de configuração do editor
+
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# arquivos de teste
+*.test
+tests/*
+
+# modulos de terceiros
+node_modules/

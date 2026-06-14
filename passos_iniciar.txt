@@ -1,0 +1,8 @@
+Passos para rodar o projeto completo:
+
+1- Instale o Node.js no seu notebook -> https://nodejs.org/en/download
+2- Após a instalação, entre no pasta front dentro do projeto através do terminal "cd front"
+3- Rode o comando "npm install"
+4- Após a instalação pressione as teclas "Ctrl + Shift + B" e selecione a task "Rodar Servidores (Frontend + Backend)"
+
+Após os passos, um terminal aparecerá dividido e rodará os dois servidores.

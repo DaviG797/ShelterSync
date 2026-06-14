@@ -32,6 +32,7 @@ from vagas.views import (
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from vagas.views import InstituicaoViewSet, AcolhidoViewSet
+from rest_framework.authtoken import views as token_views
 
 router = DefaultRouter()
 router.register(r'instituicoes-api', InstituicaoViewSet)
@@ -39,6 +40,7 @@ router.register(r'acolhidos-api', AcolhidoViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/token/', token_views.obtain_auth_token),
 
     path('admin/', admin.site.urls),
     #rotas para Acolhidos
