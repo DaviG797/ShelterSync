@@ -49,7 +49,7 @@ urlpatterns = [
     path('acolhidos/<int:pk>/update/', AcolhidoUpdateView.as_view(), name='acolhido_update'),
     path('acolhidos/<int:pk>/inativar/', AcolhidoInativacaoView.as_view(), name='acolhido_inativar'),
     #rotas para Instituicoes genéricas
-    path('instituicoes/', InstituicaoListView.as_view(), name='instituicao_list'),
+    path('', InstituicaoListView.as_view(), name='instituicao_list'),
     path('instituicoes/create/', InstituicaoCreateView.as_view(), name='instituicao_create'),
     path('instituicoes/<int:pk>/update/', InstituicaoUpdateView.as_view(), name='instituicao_update'),
     path('instituicoes/<int:pk>/inativar/', InstituicaoInativacaoView.as_view(), name='instituicao_inativar'),

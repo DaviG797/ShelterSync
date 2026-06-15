@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import {useNavigate} from 'react-router-dom'
+import Count from '../components/Count'
 
 function Unidade() {
 
@@ -11,7 +12,7 @@ function Unidade() {
 
   const [busca, setBusca] = useState('') // Para Controlar o que o usuário digita no campo de busca
 
-
+  
   // const menuRef = useRef(null); // Referência para o elemento do menu, para detectar cliques fora dele
 
   // useEffect(() => { // Fecha o menu quando clicar fora
@@ -23,6 +24,7 @@ function Unidade() {
 
   //   document.addEventListener("mousedown", lidarComCliqueFora);
   // }, [menuAberto]);
+
 
   useEffect(() => {
     
@@ -44,14 +46,14 @@ function Unidade() {
           }
           throw new Error('Erro ao buscar instituições!')
         }
-
+        
         return resposta.json()
 
       })
       .then(dadosDoBanco => {
         
         setUnidade(dadosDoBanco) // Pega os dados reais do banco e colocamos na lista
-
+        
       })
 
       .catch(erro => console.error("Erro ao buscar instituições:", erro))
@@ -95,6 +97,10 @@ function Unidade() {
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-[12px]">
           Adicionar Instituição
         </button>
+
+        <div className="ml-auto">
+          <Count label="Unidades" value={unidade.length} className="w-40" />
+        </div>
 
       </div>
 
