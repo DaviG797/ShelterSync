@@ -4,7 +4,7 @@
     {
       "label": "Iniciar Django",
       "type": "shell",
-      "command": "python manage.py runserver",
+      "command": "python manage.py runserver || py manage.py runserver",
       "isBackground": true,
       "presentation": {
         "group": "sheltersync",
