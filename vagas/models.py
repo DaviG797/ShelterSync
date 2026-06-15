@@ -1,15 +1,15 @@
 from django.db import models
 
 class Instituicao(models.Model):
-    nome = models.CharField(max_length=100) # D-12 (Nome da instituição)
-    endereco = models.CharField(max_length=200) # D-13 (Endereço completo da instituição)
+    nome = models.CharField(max_length=100) # D-12 (Nome da instituicao)
+    endereco = models.CharField(max_length=200) # D-13 (Endereço completo da instituicao)
     capacidade_total = models.IntegerField() # D-14 (Capacidade de vagas)
     categorizacao = models.CharField(max_length=50) # D-15 (Perfil do abrigo, ex: "Abrigo para idosos".)
     cnpj = models.CharField(max_length=18, unique=True) # D-16 + RN-10 ("unique" garante CNPJ único)
     contato = models.CharField(max_length=20, blank=True, default="") # D-17
-    ativo = models.BooleanField(default=True) # RF-07 (Inativar unidade)
+    ativo = models.BooleanField(default=True) # RF-07 (Inativar instituicao)
 
-    def __str__(self): #Retorna o nome da instituição para não mostrar "instituição object (1)" no admin.
+    def __str__(self): #Retorna o nome da instituicao para não mostrar "instituicao object (1)" no admin.
         return self.nome
     
 class Acolhido(models.Model):

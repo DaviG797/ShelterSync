@@ -40,7 +40,7 @@ function Login() {
       .then(dados => {
         sessionStorage.setItem('token', dados.token)
 
-        navigate('/instituicoes')
+        navigate('/unidades') 
       })
       .catch(erro => {
 

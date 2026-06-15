@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
-import Instituicoes from './pages/Instituicoes'
+import Instituicoes from './pages/Unidade'
 import Login from './pages/Login'
 import Layout from './components/Layout'
 
@@ -17,7 +17,7 @@ function App() {
         <Route path="/" element={<Login />} />
 
         <Route element={<Layout />}>
-          <Route path="/instituicoes" element={<Instituicoes />} />
+          <Route path="/unidades" element={<Instituicoes />} />
           <Route path="/acolhidos" element={<Acolhidos />} />
         </Route>
       </Routes>

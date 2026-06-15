@@ -1,8 +1,15 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, Navigate } from 'react-router-dom'
 
 import AutoLogout from './AutoLogout'
 
 function Layout() {
+
+    const token = sessionStorage.getItem("token") // Verifica se o token existe no sessionStorage
+
+    // Se o token não existir, redireciona para a página de login
+    if (!token) { 
+        return <Navigate to="/" replace />
+    } 
 
     return (
         <div className="min-h-screen bg-gray-200">
@@ -13,8 +20,12 @@ function Layout() {
                     <div className="flex gap-4 items-center">
                         <span className="font-bold text-xl mr-4">ShelterSync</span>
                         <div className="w-px h-6 bg-gray-400"></div> {/* Linha Vertical */}
-                        <Link to="/instituicoes" className="hover:text-blue-100 font-semibold transition-colors">Instituições</Link>
+                        <div className="flex gap-2">
+                            <Link to="/unidades" className="hover:text-blue-100 font-semibold transition-colors">Unidades</Link>
+                        <div className="w-1 h-px mt-3.5 bg-gray-400"></div> {/* Linha Vertical */}
                         <Link to="/acolhidos" className="hover:text-blue-100 font-semibold transition-colors">Acolhidos</Link>
+                        </div>
+                        
                     </div>
 
                     <div>
