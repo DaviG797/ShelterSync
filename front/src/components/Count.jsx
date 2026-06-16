@@ -65,15 +65,15 @@ function Count({ label = '', endpoint = null, value = null, refreshInterval = 0,
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded shadow p-4 flex items-center justify-between cursor-default ${className}`}
+      className={`bg-white rounded-lg shadow p-2 flex items-center justify-between cursor-default ${className}`}
     >
       <div>
         <div className="text-sm text-gray-500">{label}</div>
-        <div className="text-2xl font-bold text-blue-600">
+        <div className="text-lg font-bold text-blue-600">
           {loading ? '...' : error ? '-' : (count ?? '-')}
         </div>
       </div>
-      <div className="text-gray-300 text-4xl">📊</div>
+      <div className="text-gray-300 text-3xl">📊</div>
     </div>
   )
 }

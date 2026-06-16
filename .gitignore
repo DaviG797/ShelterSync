@@ -13,6 +13,7 @@ env/*
 
 # cache do python
 __pycache__/*
+__pycache__/
 *.pyc
 *.pyo
 *pyd

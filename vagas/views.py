@@ -1,14 +1,15 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
-from .models import Acolhido, Instituicao
 from .forms import AcolhidoForm, InstituicaoForm
 from django.http import HttpResponseRedirect #está aqui para caos seja preciso.
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-from rest_framework import viewsets
+from rest_framework import viewsets, generics, filters
+from rest_framework.permissions import IsAuthenticated
+from .models import Acolhido, Instituicao
 from .serializers import InstituicaoSerializer, AcolhidoSerializer
 
 class GroupRequiredMixin(UserPassesTestMixin):
@@ -91,20 +92,32 @@ class AcolhidoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
         return redirect('acolhido_list')
     allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
-
 #CRUD PARA INSTITUIÇÃO-------------------------------------------------------
 #6 - Listagem de Instituições
 class InstituicaoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
-    model = Instituicao
-    template_name = 'instituicao_list.html'
-    context_object_name = 'instituicoes'
+
+    # Direcionamento da busca
+    queryset = Instituicao.objects.all() 
+    serializer_class = InstituicaoSerializer
+
+    # Garante que só o react com token válido tenha acesso
+    permission = [IsAuthenticated]
+
+    # Realiza a filtragem automática
+    filter_back = [filters.SearchFilter]
+    seach_filds = ['nome', 'cnpj']
+
+    # model = Instituicao
+    # template_name = 'instituicao_list.html'
+    # context_object_name = 'instituicoes'
+
     # filtro RF08
-    def get_queryset(self):
-        nome_filtro = self.request.GET.get('nome')
-        if nome_filtro:
-            return Instituicao.objects.filter(nome__icontains=nome_filtro)
-        return Instituicao._base_manager.all()
-    allowed_groups = ['Assistente de Campo', 'Secretaria Social']
+    # def get_queryset(self):
+    #     nome_filtro = self.request.GET.get('nome')
+    #     if nome_filtro:
+    #         return Instituicao.objects.filter(nome__icontains=nome_filtro)
+    #     return Instituicao._base_manager.all()
+    # allowed_groups = ['Assistente de Campo', 'Secretaria Social']
     
 #7 - Criação de Instituições
 class InstituicaoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
