@@ -1,21 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import Count from '../components/Count'
+import Busca from '../components/Busca'
 
 function Unidade() {
 
-  const navigate = useNavigate() // Para mudança de rota (página)
+  // Guarda as informações em cache ---------------------------
+  const [unidade, setUnidade] = useState([])
 
-  const [unidade, setUnidade] = useState([]) // Cria uma caixa vazia para guardar as instituições
+  const [contPagina, setContPagina] = useState(1)
 
-  const [menuAberto, setMenuAberto] = useState(false); // Para controlar a abertura do menu de opções
+  const [listaCategorizacao, setListaCategorizacao] = useState([])
 
-  const [busca, setBusca] = useState('') // Para Controlar o que o usuário digita no campo de busca
+  // Sistema de Paginação --------------------------------------
 
-  // controle do modal e formulario de cadastro
+  const [buscaAtual, setBuscaAtual] = useState('')
+  // Estados para a paginação
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [temProxima, setTemProxima] = useState(false)
+  const [temAnterior, setTemAnterior] = useState(false)
+
+  // Para mudança de rota (página)
+  const navigate = useNavigate()
+
+  // Controle de Estados ---------------------------------------
+
+  // controle do modal 
   const [isModalAberto, setIsModalAberto] = useState(false)
+  // Para controlar a abertura do menu de opções
+  const [menuAberto, setMenuAberto] = useState(false);
 
+  // Para cadastro e edição ------------------------------------
+
+  // Formulario de cadastro
   const [nomeInput, setNomeInput] = useState('')
   const [enderecoInput, setEnderecoInput] = useState('')
   const [capacidadeInput, setCapacidadeInput] = useState('')
@@ -23,22 +41,39 @@ function Unidade() {
   const [cnpjInput, setCnpjInput] = useState('')
   const [contatoInput, setContatoInput] = useState('')
 
+  const mascaraCnpj = (e) => {
+    let valor = e.target.value.replace(/\D/g, '')
 
-  // const menuRef = useRef(null); // Referência para o elemento do menu, para detectar cliques fora dele
+    if (valor.length > 14) valor = valor.slice(0, 14)
 
-  // useEffect(() => { // Fecha o menu quando clicar fora
-  //   function lidarComCliqueFora(event) {
-  //     if (menuAberto && menuRef.current && !menuRef.current.contains(event.target)) {
-  //       setMenuAberto(false);
-  //     }
-  //   }
+    valor = valor.replace(/^(\d{2})(\d)/, "$1.$2")
+    valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    valor = valor.replace(/\.(\d{3})(\d)/, ".$1/$2")
+    valor = valor.replace(/(\d{4})(\d)/, "$1-$2")
 
-  //   document.addEventListener("mousedown", lidarComCliqueFora);
-  // }, [menuAberto]);
+    setCnpjInput(valor)
+  }
 
-  useEffect(() => {
+  const mascaraContato = (e) => {
+    let valor = e.target.value.replace(/\D/g, '')
+
+    if (valor.length > 11) valor = valor.slice(0, 11)
+
+    valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2")
+    valor = valor.replace(/(\d{5})(\d)/, "$1-$2")
+
+    setContatoInput(valor)
+  }
+
+  // Funções de pesquisa -----------------------------------------
+
+  const realizarBusca = (termoPesquisar, pagina = 1) => {
+
     const token = sessionStorage.getItem('token')
-    fetch('http://localhost:8000/api/instituicoes-api/', {
+
+    setBuscaAtual(termoPesquisar)
+
+    fetch(`http://localhost:8000/api/instituicoes-api/?search=${termoPesquisar}&page=${pagina}`, {
       method: 'GET',
       headers: {
         'Authorization': `Token ${token}`,
@@ -56,15 +91,35 @@ function Unidade() {
         }
         return resposta.json()
       })
-      .then(dados => setUnidade(dados))
+      .then(dados => {
+        setUnidade(dados.results)
+
+        setTemProxima(dados.next !== null)
+        setTemAnterior(dados.previous !== null)
+        setPaginaAtual(pagina)
+
+        // Quantidade de páginas totais
+        const totalPagina = Math.ceil(dados.count / 10)
+        setContPagina(totalPagina === 0 ? 1 : totalPagina)
+      })
       .catch(erro => console.error("Erro:", erro))
-  }, [navigate])
+
+  }
+
+  useEffect(() => {
+    realizarBusca('')
+  }, [])
+
+  // Função de enviar os dados para o banco (Cadastrar e Editar) -----------------------
 
   // Enviar o cadastro para o Banco (POST)
-  const lidarComCadastro = (e) => {
+  const enviarCadastro = (e) => {
     e.preventDefault() // Impede a página de dar F5 ao enviar o formulário
 
     const token = sessionStorage.getItem('token')
+
+    const cnpjPuro = cnpjInput.replace(/\D/g, '')
+    const cnpjContato = contatoInput.replace(/\D/g, '')
 
     // Montamos o pacotinho de dados igual ao que o Django espera receber
     const novaUnidade = {
@@ -72,8 +127,8 @@ function Unidade() {
       endereco: enderecoInput,
       capacidade_total: capacidadeInput,
       categorizacao: categorizacaoInput,
-      cnpj: cnpjInput,
-      contato: contatoInput
+      cnpj: cnpjPuro,
+      contato: contatoPuro
     }
 
     fetch('http://localhost:8000/api/instituicoes-api/', {
@@ -111,47 +166,41 @@ function Unidade() {
       .catch(erro => alert('Não foi possível cadastrar: ' + erro.message))
   }
 
+  // Para pegar a lista de categorização das unidades
+
+  // useEffect(() => {
+  //   const token = sessionStorage.getItem('token')
+
+  //   fetch('http://localhost:8000/api/categorias-api/', { // Coloque a URL correta da sua API de categorias
+  //     headers: { 'Authorization': `Token ${token}` }
+  //   })
+  //     .then(res => res.json())
+  //     .then(dados => {
+  //       // Se a sua API de categorias usar paginação, os dados estarão em dados.results
+  //       // Se for uma lista direta, estará em dados
+  //       const categorias = dados.results ? dados.results : dados
+  //       setListaCategorias(categorias)
+  //     })
+  //     .catch(erro => console.error("Erro ao buscar categorias:", erro))
+  // }, [])
 
   return (
-    <div className="pr-8 pl-8 pt-5 bg-gray-100 min-h-screen">
+    <div className="pr-8 pl-8 pt-5 bg-gray-50 min-h-screen">
 
       <h1 className="text-3xl font-bold text-blue-600 mb-2">
         Unidades de Acolhimento
       </h1>
 
-      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
-
-        <div className="relative w-full md:w-65">
-          <input
-            type="text"
-            placeholder="Buscar Unidade"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 shadow-sm"
-          />
-
-          {/* Ícone de Lupa */}
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
-
-          {/* Botão X*/}
-          {busca.length > 0 && (
-            <button
-              onClick={() => setBusca('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1 rounded-full hover:bg-gray-100 transition-colors"
-              title="Limpar busca"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+        <Busca
+          placeholder="Buscar Unidade"
+          apiEndpoint="http://localhost:8000/api/instituicoes-api/"
+          onBuscar={(termo) => realizarBusca(termo, 1)}
+        />
 
         <button
           onClick={() => setIsModalAberto(true)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-[12px]"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-[14px]"
         >
           Adicionar Unidade
         </button>
@@ -161,13 +210,51 @@ function Unidade() {
         </div>
       </div>
 
+      <div className="flex items-center justify-between bg-gray-100 px-1 py-2 border-l border-r border-gray-200 sm:px-6 rounded-lg  ">
+
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              Página <span className="font-medium">{paginaAtual}</span> de  <span className='font-medium'>{contPagina}</span>
+            </p>
+          </div>
+          <div>
+            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <button
+                onClick={() => realizarBusca(busca, paginaAtual - 1)}
+                disabled={!temAnterior}
+                className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 bg-white ring-1 ring-inset ring-gray-300 ${!temAnterior ? 'cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:bg-gray-50 focus:z-20'}`}
+              >
+                <span className="sr-only">Anterior</span>
+                {/* Ícone de seta para a esquerda */}
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => realizarBusca(buscaAtual, paginaAtual + 1)}
+                disabled={!temProxima}
+                className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 bg-white ring-1 ring-inset ring-gray-300 ${!temProxima ? 'cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:bg-gray-50 focus:z-20'}`}
+              >
+                <span className="sr-only">Próxima</span>
+                {/* Ícone de seta para a direita */}
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
       {/* Listagem dos Cartões */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mt-2">
         {unidade.map((item) => (
           <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
             <div>
 
-              <h3 className="text-lg font-semibold text-gray-800">Nome: {item.nome}</h3>
+              <h3 className="text-lg font-semibold text-gray-800">{item.nome}</h3>
               <div className='flex gap-3'>
 
                 <p className="text-sm text-gray-500">Endereço: {item.endereco}</p>
@@ -210,7 +297,7 @@ function Unidade() {
           <div className="bg-white rounded-xl p-6 shadow-2xl w-full max-w-md mx-4 border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Cadastrar Instituição</h2>
 
-            <form onSubmit={lidarComCadastro} className="space-y-4">
+            <form onSubmit={enviarCadastro} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Nome da Instituição</label>
                 <input
@@ -256,6 +343,22 @@ function Unidade() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
               </div>
+              {/* <div>
+                <select
+                  value={categorizacaoInput}
+                  onChange={(e) => setCategorizacaoInput(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>Selecione uma categoria...</option>
+
+                  {listaCategorias.map((cat) => (
+                    // Salvamos o 'id' no categorizacaoInput, pois o Django geralmente espera a chave estrangeira (ID)
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nome}
+                    </option>
+                  ))}
+                </select>
+              </div> */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">CNPJ</label>
                 <input
@@ -263,7 +366,7 @@ function Unidade() {
                   required
                   placeholder="Ex: 00.000.000/0000-00"
                   value={cnpjInput}
-                  onChange={(e) => setCnpjInput(e.target.value)}
+                  onChange={mascaraCnpj}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -274,7 +377,7 @@ function Unidade() {
                   required
                   placeholder="Ex: (00)0 0000-0000"
                   value={contatoInput}
-                  onChange={(e) => setContatoInput(e.target.value)}
+                  onChange={mascaraContato}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                 />
               </div>

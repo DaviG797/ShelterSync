@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema Regional - Cadastro de Categoria</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 20px;">
+    {% include 'logoutbar.html' %}
+    
+    <h2>{% if object %}Editar Perfil/Categoria{% else %}Cadastrar Novo Perfil/Categoria{% endif %}</h2>
+    <hr>
+
+    <form method="POST" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+
+        <div style="background: #e2e3e5; padding: 10px; margin: 15px 0; border-left: 4px solid #6c757d;">
+            <strong>Importante:</strong> Para manter a organização dos dados, não é permitido cadastrar categorias com nomes idênticos.
+        </div>
+
+        <button type="submit" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">
+            Salvar Categoria
+        </button>
+        <a href="{% url 'instituicao_list' %}" style="margin-left: 10px; text-decoration: none; color: #d9534f;">Cancelar</a>
+    </form>
+</body>
+</html>
