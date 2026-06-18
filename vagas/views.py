@@ -54,7 +54,7 @@ class InstituicaoViewSet(viewsets.ModelViewSet):
     
     # Filtros de Busca 
     filter_backends = [filters.SearchFilter]
-    search_fields = ['^nome', 'cnpj']
+    search_fields = ['nome', 'cnpj']
 
 class AcolhidoViewSet(viewsets.ModelViewSet):
    

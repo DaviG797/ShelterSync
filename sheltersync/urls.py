@@ -18,7 +18,7 @@ from vagas.views import (
 router = DefaultRouter()
 router.register(r'instituicoes-api', InstituicaoViewSet, basename='instituicao')
 router.register(r'acolhidos-api', AcolhidoViewSet, basename='acolhido')
-router.register(r'categoria-api', CategoriaViewSet, basename='categoria')
+router.register(r'categorias-api', CategoriaViewSet, basename='categoria')
 router.register(r'reserva-api', ReservasViewSet, basename='reserva')
 
 urlpatterns = [
@@ -38,13 +38,10 @@ urlpatterns = [
     path('acolhidos/<int:pk>/inativar/', AcolhidoInativacaoView.as_view(), name='acolhido_inativar'),
     #rotas para Instituicoes genéricas
     path('', InstituicaoListView.as_view(), name='instituicao_list'),
-<<<<<<< HEAD
-=======
     path('acolhidos/<int:pk>/ativar/', AcolhidoAtivacaoView.as_view(), name='acolhido_ativar'),
     
     # -- Rotas de Instituições --
     path('instituicoes/', InstituicaoListView.as_view(), name='instituicao_list'),
->>>>>>> ed0c52a86cdb91605d6db735e1219f10f6a43a7d
     path('instituicoes/create/', InstituicaoCreateView.as_view(), name='instituicao_create'),
     path('instituicoes/<int:pk>/update/', InstituicaoUpdateView.as_view(), name='instituicao_update'),
     path('instituicoes/<int:pk>/inativar/', InstituicaoInativacaoView.as_view(), name='instituicao_inativar'),

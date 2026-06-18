@@ -41,7 +41,7 @@ class Instituicao(models.Model):
         blank=True,
         related_name='instituicoes'
     )
-    cnpj = models.CharField(max_length=18, unique=True) # D-16 + RN-10 ("unique" garante CNPJ único)
+    cnpj = models.IntegerField(max_length=14, unique=True) # D-16 + RN-10 ("unique" garante CNPJ único)
     ativo = models.BooleanField(default=True) # RF-07 (Inativar instituicao)
     endereco = models.OneToOneField( # D-13 (Endereço completo da instituicao)
         Endereco_Instituicao, 
