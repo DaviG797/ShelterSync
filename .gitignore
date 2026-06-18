@@ -45,3 +45,9 @@ tests/*
 
 # modulos de terceiros
 node_modules/
+<<<<<<< HEAD
+*.pyc
+*.pyc
+=======
+.vscode/
+>>>>>>> b8c464ed928f5a2d3de62ed04d50d884956f2e96

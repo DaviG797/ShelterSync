@@ -142,3 +142,11 @@ LOGOUT_REDIRECT_URL = 'login'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+# Configuração do Django pro Framework
+REST_FRAMEWORK = {
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # Define quantos itens aparecerão por página
+    'PAGE_SIZE': 10,
+}

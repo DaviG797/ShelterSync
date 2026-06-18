@@ -2,20 +2,28 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ShelterSync - Formulário</title>
+    <title>Sistema de Gestão de Acolhimento - Formulário</title>
 </head>
 <body>
     <h2>{% if object %}Editar Acolhido{% else %}Cadastrar Acolhido{% endif %}</h2>
     <hr>
 
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         
-        {{ form.as_p }}
+        <h3>Dados Pessoais</h3>
+        {{ form.as_p }}  <h3>Documentação</h3>
+        {{ form_documentacao.as_p }}
+
+        <h3>Documentação</h3>
+        {{ form_documentacao.as_p }}
+
+        <h3>Endereço</h3>
+        {{ form_endereco.as_p }}
 
         <div style="background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffc107;">
-            <strong>Nota:</strong> O campo "Histórico de Saúde" é criptografado automaticamente. 
-            Se marcar que não possui documentos, preencha a justificativa.
+            <strong>Nota:</strong> O campo "Laudo Médico" agora aceita o envio de laudos em anexo. 
+            Se marcar a opção "Sem Documentação", preencha a justificativa.
         </div>
 
         <button type="submit" style="background: green; color: white; padding: 8px 15px;">Confirmar e Salvar</button>
@@ -23,18 +31,42 @@
     </form>
 
     <script>
-        const docInput = document.getElementById('id_documentacao');
-        const justInput = document.getElementById('id_justificativa_sem_doc');
+        // No novo modelo, não existe mais apenas um campo de texto para o documento.
+        // A lógica agora vigia a LISTA SUSPENSA (select) do "tipo" de documento.
         
-        if(docInput && justInput) {
-            // Esconde a justificativa por padrão se o documento já estiver preenchido
-            justInput.parentElement.style.display = docInput.value ? 'none' : 'block';
+        // Os prefixos 'id_' são o padrão do Django, mas se você usar 'prefix' nas views, isso pode mudar.
+        const tipoDocInput = document.getElementById('id_tipo'); 
+        const numeroInput = document.getElementById('id_numero');
+        const justificativaInput = document.getElementById('id_justificativa');
+        
+        function atualizarCamposDocumento() {
+            if(tipoDocInput && justificativaInput && numeroInput) {
+                // Se o usuário escolheu "Sem Documentação"
+                if (tipoDocInput.value === 'SEM_DOC') {
+                    // Esconde o campo de digitar o número e mostra a justificativa
+                    numeroInput.parentElement.style.display = 'none';
+                    justificativaInput.parentElement.style.display = 'block';
+                    
+                    // Altera a obrigatoriedade
+                    numeroInput.removeAttribute('required');
+                    justificativaInput.setAttribute('required', 'required');
+                } else {
+                    // Se escolheu CPF, RG, etc.
+                    numeroInput.parentElement.style.display = 'block';
+                    justificativaInput.parentElement.style.display = 'none';
+                    
+                    numeroInput.setAttribute('required', 'required');
+                    justificativaInput.removeAttribute('required');
+                }
+            }
+        }
+
+        if (tipoDocInput) {
+            // Roda a função sempre que o usuário trocar a opção no select
+            tipoDocInput.addEventListener('change', atualizarCamposDocumento);
             
-            docInput.addEventListener('input', function() {
-                justInput.parentElement.style.display = this.value ? 'none' : 'block';
-                if (!this.value) justInput.setAttribute('required', 'required');
-                else justInput.removeAttribute('required');
-            });
+            // Roda a função uma vez assim que a página carrega (útil para a tela de Edição)
+            atualizarCamposDocumento();
         }
     </script>
 </body>
