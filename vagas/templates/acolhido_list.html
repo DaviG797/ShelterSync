@@ -2,55 +2,71 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ShelterSync - Cadastro de Acolhidos</title>
+    <title>Sistema de Gestão de Acolhimento - Painel</title>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; margin: 20px;">
     {% include 'logoutbar.html' %}
-    <h1>ShelterSync - Painel de Acolhidos</h1>
-    <a href="{% url 'acolhido_create' %}">Adicionar Novo Acolhido</a> | 
-    <a href="{% url 'instituicao_list' %}">Ver Unidades de Instituição</a>
+    
+    <h1>Painel Regional de Acolhidos</h1>
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'acolhido_create' %}" style="text-decoration: none; padding: 5px 10px; background-color: #007bff; color: white; border-radius: 4px;">+ Adicionar Novo Acolhido</a> 
+        <span style="margin: 0 10px;">|</span>
+        <a href="{% url 'instituicao_list' %}" style="text-decoration: none; color: #5bc0de;">Ver Unidades de Instituição</a>
+    </div>
     <hr>
 
     {% if messages %}
         {% for message in messages %}
-            <div style="background: #f8d7da; color: #842029; padding: 10px; margin-bottom: 10px;">{{ message }}</div>
+            <div style="background: #d4edda; color: #155724; padding: 10px; border-left: 4px solid #28a745; margin-bottom: 15px;">
+                {{ message }}
+            </div>
         {% endfor %}
     {% endif %}
 
-    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <thead>
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left;">
+        <thead style="background-color: #f2f2f2;">
             <tr>
-                <th>Nome do Acolhido</th>
-                <th>Documentação</th>
-                <th>Gênero</th>
-                <th>Instituição Atual</th>
-                <th>Ações</th>
+                <th style="padding: 10px;">Nome do Acolhido</th>
+                <th style="padding: 10px;">Documentação</th>
+                <th style="padding: 10px;">Gênero</th>
+                <th style="padding: 10px;">Instituição Atual</th>
+                <th style="padding: 10px; text-align: center;">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for acolhido in acolhidos %}
             <tr {% if not acolhido.ativo %}style="opacity: 0.6; background-color: #f8d7da;"{% endif %}>
-                <td><strong>{{ acolhido.nome }}</strong></td>
-                <td>
+                <td style="padding: 10px;"><strong>{{ acolhido.nome }}</strong></td>
+                <td style="padding: 10px;">
                     {% if acolhido.documentacao %}
                         {{ acolhido.documentacao }}
                     {% else %}
-                        <span style="color: orange;">Sem Doc.</span>
+                        <span style="color: #d9534f; font-weight: bold;">Sem Doc.</span>
                     {% endif %}
                 </td>
-                <td>{{ acolhido.genero }}</td>
-                <td>{{ acolhido.instituicao_atual.nome }}</td>
-                <td>
-                    {% if acolhido.ativo %}
-                        <a href="{% url 'acolhido_update' acolhido.pk %}">Editar</a> | 
-                        <a href="{% url 'acolhido_inativar' acolhido.pk %}" style="color: red;">Inativar</a>
+                <td style="padding: 10px;">{{ acolhido.genero }}</td>
+                <td style="padding: 10px;">
+                    {% if acolhido.instituicao_atual %}
+                        {{ acolhido.instituicao_atual.nome }}
                     {% else %}
-                        <a href="{% url 'acolhido_ativar' acolhido.pk %}" style="color: green; font-weight: bold;">Ativar</a>
+                        <span style="color: #6c757d;">Não vinculado</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                    {% if acolhido.ativo %}
+                        <a href="{% url 'acolhido_update' acolhido.pk %}" style="color: #007bff; text-decoration: none;">Editar</a> | 
+                        <a href="{% url 'acolhido_inativar' acolhido.pk %}" style="color: #dc3545; text-decoration: none;">Inativar</a>
+                    {% else %}
+                        <a href="{% url 'acolhido_ativar' acolhido.pk %}" style="color: #28a745; font-weight: bold; text-decoration: none;">Ativar</a>
                     {% endif %}
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5">Nenhum cidadão acolhido no sistema.</td></tr>
+            <tr>
+                <td colspan="5" style="padding: 20px; text-align: center; color: #6c757d;">
+                    Nenhum cidadão acolhido registrado no sistema.
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>

@@ -2,23 +2,97 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ShelterSync - Formulario de Unidade</title>
+    <title>Sistema de Gestão Regional - Formulário de Unidade</title>
 </head>
 <body>
-    <h2>{% if object %}Editar Unidade {% else %}Cadastrar Nova Unidade {% endif %}</h2>
+    <h2>{% if object %}Editar Unidade{% else %}Cadastrar Nova Unidade{% endif %}</h2>
     <hr>
 
     <form method="POST">
         {% csrf_token %}
         
+        <h3>Dados da Instituição</h3>
         {{ form.as_p }}
 
-        <div style="background: #e2e3e5; padding: 10px; margin: 10px 0;">
-            <strong>Nota:</strong> cada instituição deve ter um CNPJ único.
+        <h3>Endereço da Unidade</h3>
+        {{ form_endereco.as_p }}
+        
+        <h3>Contatos da Unidade</h3>
+        {{ form_contato.management_form }} 
+
+        <div id="contato-form-list" style="background: #f8f9fa; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            {% for contato_form in form_contato %}
+                <div class="contato-form-item" style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #b8b5b5;">
+                    
+                    {% if contato_form.instance.pk %}
+                        <div style="float: right;">Apagar: {{ contato_form.DELETE }}</div>
+                    {% endif %}
+                    
+                    {{ contato_form.as_p }}
+                    
+                
+                </div>
+            {% endfor %}
         </div>
 
-        <button type="submit" style="background: blue; color: white; padding: 8px 15px;">Salvar Unidade</button>
-        <a href="{% url 'instituicao_list' %}">Cancelar</a>
+        <button type="button" id="add-contato" style="margin-top: 10px; background: #17a2b8; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">
+            + Adicionar outro contato
+        </button>
+
+        <div style="background: #e2e3e5; padding: 10px; margin: 10px 0; border-left: 4px solid #6c757d;">
+            <strong>Nota:</strong> Cada instituição deve ter um CNPJ único no sistema. O endereço e o contato principal são obrigatórios para o registro.
+        </div>
+
+        <button type="submit" style="background: blue; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">
+            Salvar Unidade
+        </button>
+        <a href="{% url 'instituicao_list' %}" style="margin-left: 10px; text-decoration: none; color: #d9534f;">Cancelar</a>
     </form>
 </body>
+
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addContatoBtn = document.getElementById('add-contato');
+            const contatoList = document.getElementById('contato-form-list');
+            
+            // O nome exato que o Django gerou para gerenciar os forms
+            // Geralmente é [nomedomodelo]_set-TOTAL_FORMS, tudo minúsculo
+            const totalFormsInput = document.getElementById('id_contato_instituicao_set-TOTAL_FORMS') || 
+                                    document.querySelector('input[name$="-TOTAL_FORMS"]');
+
+            if (addContatoBtn && totalFormsInput) {
+                addContatoBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Pega todas as caixinhas de contato atuais
+                    const formItems = document.querySelectorAll('.contato-form-item');
+                    // Pega a última caixinha para usar de molde
+                    const lastFormItem = formItems[formItems.length - 1];
+                    // Faz uma cópia exata dela
+                    const newFormItem = lastFormItem.cloneNode(true);
+                    
+                    // Qual é o número do novo formulário? (Se tem 1, o próximo é índice 1)
+                    const formCount = formItems.length;
+                    
+                    // Troca os números ocultos (ex: de -0- para -1-) no molde novo
+                    const regex = new RegExp(`-\\d+-`, 'g');
+                    newFormItem.innerHTML = newFormItem.innerHTML.replace(regex, `-${formCount}-`);
+                    
+                    // Limpa os textos que o usuário possa ter digitado no molde original
+                    const inputs = newFormItem.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.type !== 'hidden') {
+                            input.value = '';
+                        }
+                    });
+                    
+                    // Coloca a nova caixinha na tela
+                    contatoList.appendChild(newFormItem);
+                    
+                    // Avisa o Django que o total de formulários aumentou
+                    totalFormsInput.value = formCount + 1;
+                });
+            }
+        });
+    </script>
 </html>

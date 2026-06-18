@@ -2,52 +2,78 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>ShelterSync - Unidades de Instituição</title>
+    <title>Sistema de Gestão Regional - Unidades de Instituição</title>
 </head>
-<body>
+<body style="font-family: Arial, sans-serif; margin: 20px;">
     {% include 'logoutbar.html' %}
-    <h1>ShelterSync - Unidades de Instituição</h1>
-    <a href="{% url 'instituicao_create' %}">Cadastrar Nova Unidade</a> | 
-    <a href="{% url 'acolhido_list' %}">Voltar para Acolhidos</a>
+    
+    <h1>Painel Regional de Instituições</h1>
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'instituicao_create' %}" style="text-decoration: none; padding: 5px 10px; background-color: #007bff; color: white; border-radius: 4px;">+ Cadastrar Nova Unidade</a> 
+        
+        <span style="margin: 0 10px; color: #ccc;">|</span>
+        
+        <a href="{% url 'categoria_create' %}" style="text-decoration: none; padding: 5px 10px; background-color: #17a2b8; color: white; border-radius: 4px;">+ Nova Categoria</a>
+        
+        <span style="margin: 0 10px; color: #ccc;">|</span>
+        
+        <a href="{% url 'acolhido_list' %}" style="text-decoration: none; color: #5bc0de;">Voltar para Acolhidos</a>
+    </div>
     <hr>
 
     {% if messages %}
         {% for message in messages %}
-            <div style="background: #f8d7da; color: #842029; padding: 10px; margin-bottom: 10px;">{{ message }}</div>
+            <div style="background: #d4edda; color: #155724; padding: 10px; border-left: 4px solid #28a745; margin-bottom: 15px;">
+                {{ message }}
+            </div>
         {% endfor %}
     {% endif %}
 
-    <form method="GET">
-        <input type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar instituição por nome...">
-        <button type="submit">Pesquisar</button>
+    <form method="GET" style="margin-bottom: 15px;">
+        <input type="text" name="nome" value="{{ request.GET.nome }}" placeholder="Buscar instituição por nome..." style="padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Pesquisar</button>
     </form>
 
-    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <thead>
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left;">
+        <thead style="background-color: #f2f2f2;">
             <tr>
-                <th>Nome da Instituição</th>
-                <th>Capacidade</th>
-                <th>Perfil / Categorização</th>
-                <th>CNPJ</th>
-                <th>Ações</th>
+                <th style="padding: 10px;">Nome da Instituição</th>
+                <th style="padding: 10px;">Capacidade</th>
+                <th style="padding: 10px;">Perfil / Categorização</th>
+                <th style="padding: 10px;">CNPJ</th>
+                <th style="padding: 10px; text-align: center;">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for inst in instituicoes %}
             <tr {% if not inst.ativo %}style="opacity: 0.6; background-color: #f8d7da;"{% endif %}>
-                <td><strong>{{ inst.nome }}</strong></td>
-                <td>{{ inst.capacidade_total }} vagas</td>
-                <td>{{ inst.categorizacao }}</td>
-                <td>{{ inst.cnpj }}</td>
-                <td>
-                    {% if inst.ativo %}
-                        <a href="{% url 'instituicao_update' inst.pk %}">Editar</a> | 
-                        <a href="{% url 'instituicao_inativar' inst.pk %}" style="color: red;">Inativar</a>
+                <td style="padding: 10px;"><strong>{{ inst.nome }}</strong></td>
+                <td style="padding: 10px;">{{ inst.capacidade_total }} vagas</td>
+                <td style="padding: 10px;">
+                    {% if inst.categorizacao %}
+                        {{ inst.categorizacao }}
                     {% else %}
-                        <a href="{% url 'instituicao_ativar' inst.pk %}" style="color: green; font-weight: bold;">Ativar</a>
+                        <span style="color: #6c757d;">Não definida</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">{{ inst.cnpj }}</td>
+                <td style="padding: 10px; text-align: center;">
+                    {% if inst.ativo %}
+                        <a href="{% url 'instituicao_update' inst.pk %}" style="color: #007bff; text-decoration: none;">Editar</a> | 
+                        <a href="{% url 'instituicao_inativar' inst.pk %}" style="color: #dc3545; text-decoration: none;">Inativar</a>
+                    {% else %}
+                        <a href="{% url 'instituicao_ativar' inst.pk %}" style="color: #28a745; font-weight: bold; text-decoration: none;">Ativar</a>
                     {% endif %}
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5">Nenhuma unidade institucional cadastrada.</td></tr>
+            <tr>
+                <td colspan="5" style="padding: 20px; text-align: center; color: #6c757d;">
+                    Nenhuma unidade institucional cadastrada no sistema.
+                </td>
+            </tr>
             {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

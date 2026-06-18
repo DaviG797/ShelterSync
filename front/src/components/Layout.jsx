@@ -14,7 +14,7 @@ function Layout() {
     return (
         <div className="min-h-screen bg-gray-200">
             
-            <div className="max-w-6xl mx-auto bg-gray-50 min-h-screen shadow-2xl flex flex-col">
+            <div className="max-w-5xl mx-auto bg-gray-50 min-h-screen shadow-2xl flex flex-col">
 
                 <nav className="bg-blue-800 pl-10 pr-10 py-1 text-white flex justify-between items-center shadow-md">
                     <div className="flex gap-4 items-center">
