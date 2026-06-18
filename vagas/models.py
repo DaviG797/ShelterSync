@@ -1,5 +1,8 @@
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
+from django.utils import timezone
 
 class Categoria(models.Model):
 
@@ -40,6 +43,12 @@ class Instituicao(models.Model):
     )
     cnpj = models.CharField(max_length=18, unique=True) # D-16 + RN-10 ("unique" garante CNPJ único)
     ativo = models.BooleanField(default=True) # RF-07 (Inativar instituicao)
+    endereco = models.OneToOneField( # D-13 (Endereço completo da instituicao)
+        Endereco_Instituicao, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
 
     @property
     def vagas_disponiveis(self): # Retorna a quantidade de vagas restantes em tempo real
@@ -157,3 +166,116 @@ class Acolhido(models.Model):
     def __str__(self): #Retorna o nome do acolhido para não mostrar "acolhido object (1)" no admin.
         return self.nome
 
+# Para gerar um histórico de entrada e saida para relatorios
+class HistoricoAcolhimento(models.Model):
+    acolhido = models.ForeignKey(
+        Acolhido, 
+        on_delete=models.CASCADE, 
+        related_name='historico_estadias'
+    )
+    instituicao = models.ForeignKey(
+        Instituicao, 
+        on_delete=models.CASCADE, 
+        related_name='historico_vagas'
+    )
+    
+    # Grava a data e hora exata em que o registro foi criado
+    data_entrada = models.DateTimeField(default=timezone.now) 
+    
+    # Fica em branco até o dia em que ele sair do abrigo
+    data_saida = models.DateTimeField(null=True, blank=True) 
+    
+    motivo_saida = models.CharField(max_length=200, blank=True, null=True) 
+
+    def __str__(self):
+        return f"{self.acolhido.nome} -> {self.instituicao.nome}"
+
+# Para criar as reservas -------------------------------------------
+class ReservaVaga(models.Model):
+    acolhido = models.OneToOneField(
+        Acolhido, 
+        on_delete=models.CASCADE, 
+        related_name='reserva_atual'
+    )
+    instituicao = models.ForeignKey(
+        Instituicao, 
+        on_delete=models.CASCADE, 
+        related_name='fila_espera'
+    )
+    
+    # Grava o milissegundo exato em que a pessoa entrou na fila
+    data_solicitacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Organiza automaticamente a tabela para que o mais antigo fique no topo (índice 0)
+        ordering = ['data_solicitacao'] 
+
+    def __str__(self):
+        return f"Reserva: {self.acolhido.nome} aguardando vaga em {self.instituicao.nome}"
+    
+# Garantir o histórico conforme o acolhido esteja vinculado a uma instituição 
+  
+# ANTES DE SALVAR (Descobre de onde ele está saindo)
+@receiver(pre_save, sender=Acolhido)
+def fechar_historico_antigo(sender, instance, **kwargs):
+    if instance.pk: # Se o acolhido já existe no banco
+        acolhido_antigo = Acolhido.objects.get(pk=instance.pk)
+        
+        # Se a instituição mudou (ou se ele saiu do sistema)
+        if acolhido_antigo.instituicao_atual != instance.instituicao_atual:
+            if acolhido_antigo.instituicao_atual:
+                # Procura o histórico em aberto e preenche a data de saída com o dia de hoje
+                historico_aberto = HistoricoAcolhimento.objects.filter(
+                    acolhido=instance, 
+                    instituicao=acolhido_antigo.instituicao_atual, 
+                    data_saida__isnull=True
+                ).first()
+                
+                if historico_aberto:
+                    historico_aberto.data_saida = timezone.now()
+                    historico_aberto.motivo_saida = "Transferência ou Desligamento"
+                    historico_aberto.save()
+
+#  DEPOIS DE SALVAR (Registra onde ele está entrando)
+@receiver(post_save, sender=Acolhido)
+def criar_novo_historico(sender, instance, created, **kwargs):
+
+    # Se ele foi alocado em uma instituição (seja um cadastro novo ou transferência)
+    if instance.instituicao_atual:
+        # Verifica se já não existe um histórico em aberto para ele nesse mesmo abrigo (evita duplicação)
+        historico_aberto_existe = HistoricoAcolhimento.objects.filter(
+            acolhido=instance,
+            instituicao=instance.instituicao_atual,
+            data_saida__isnull=True
+        ).exists()
+
+        if not historico_aberto_existe:
+            # Cria a nova página no Livro de Registros!
+            HistoricoAcolhimento.objects.create(
+                acolhido=instance,
+                instituicao=instance.instituicao_atual,
+                data_entrada=timezone.now()
+            )
+
+@receiver(pre_save, sender=Acolhido)
+def processar_fila_de_espera(sender, instance, **kwargs):
+    if instance.pk:
+        acolhido_antigo = Acolhido.objects.get(pk=instance.pk)
+        
+        # Se o acolhido tinha uma instituição e agora está saindo dela
+        if acolhido_antigo.instituicao_atual and acolhido_antigo.instituicao_atual != instance.instituicao_atual:
+            
+            instituicao_que_abriu_vaga = acolhido_antigo.instituicao_atual
+            
+            # Pega o PRIMEIRO da fila desta instituição específica
+            proximo_da_fila = ReservaVaga.objects.filter(instituicao=instituicao_que_abriu_vaga).first()
+            
+            if proximo_da_fila:
+                pessoa_esperando = proximo_da_fila.acolhido
+                
+                # Transfere a pessoa da fila para dentro da instituição
+                pessoa_esperando.instituicao_atual = instituicao_que_abriu_vaga
+                pessoa_esperando.save() # Salva a pessoa (isso também vai engatilhar o Histórico!)
+                
+                # Exclui a reserva temporária do banco, limpando a tabela
+                proximo_da_fila.delete()

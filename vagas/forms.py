@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import inlineformset_factory
 from .models import Acolhido, Documentacao, Endereco_Acolhido , Instituicao, Endereco_Instituicao, Contato_Instituicao, Categoria
 
 # Forms para os modelos Acolhido e Instituição, utilizando ModelForm para facilitar a criação de formulários baseados nos modelos definidos.
@@ -49,3 +50,11 @@ class InstituicaoForm(forms.ModelForm):
         model = Instituicao
         # O 'endereco' fica de fora, pois é tratado no formulário acima
         fields = ['nome', 'cnpj', 'capacidade_total', 'categorizacao', 'ativo']
+
+ContatoInstituicaoFormSet = inlineformset_factory(
+    Instituicao, 
+    Contato_Instituicao, 
+    form=ContatoInstituicaoForm,
+    extra=1, # Quantas caixinhas em branco aparecem por padrão ao carregar a tela
+    can_delete=True # Permite que o usuário marque uma caixinha para apagar o contato
+)

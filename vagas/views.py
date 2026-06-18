@@ -1,19 +1,22 @@
 
 # importações do Django
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, get_list_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db import transaction
 
 # Importações do rest_framework
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 # Importações das informações do/para o banco
-from .forms import InstituicaoForm, AcolhidoForm, DocumentacaoForm, EnderecoForm, InstituicaoForm, EnderecoInstituicaoForm, ContatoInstituicaoForm, CategoriaForm
-from .models import Acolhido, Instituicao, Categoria
+from .forms import InstituicaoForm, AcolhidoForm, DocumentacaoForm, EnderecoForm, InstituicaoForm, EnderecoInstituicaoForm, ContatoInstituicaoForm, CategoriaForm, ContatoInstituicaoFormSet
+from .models import Acolhido, Instituicao, Categoria, ReservaVaga
 from .serializers import InstituicaoSerializer, AcolhidoSerializer, CategoriaSerializer
 from .serializers import InstituicaoResumoSerializer, AcolhidoResumoSerializer
 
@@ -76,6 +79,51 @@ class AcolhidoViewSet(viewsets.ModelViewSet):
     # Filtros de Busca 
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome', 'cpf']
+
+    @action(detail=True, methods=['post'])
+    def alocar(self, request, pk=None):
+        # 1. Pega o Acolhido pelo ID da URL
+        acolhido = self.get_object() 
+        
+        # 2. Pega o ID da Instituição que o React enviou no JSON
+        instituicao_id = request.data.get('instituicao_id')
+        instituicao_desejada = get_object_or_404(Instituicao, pk=instituicao_id)
+
+        # 3. O CADEADO: Garante que ninguém mais mexa no banco enquanto essa lógica roda
+        with transaction.atomic():
+            
+            # Verifica se já existe uma reserva antiga e apaga para evitar duplicidade
+            if hasattr(acolhido, 'reserva_atual'):
+                acolhido.reserva_atual.delete()
+
+            # A LÓGICA DO PASSO 2: Tem vaga?
+            if instituicao_desejada.vagas_disponiveis > 0:
+                # Entra direto
+                acolhido.instituicao_atual = instituicao_desejada
+                acolhido.save()
+                
+                return Response({
+                    "status": "sucesso",
+                    "mensagem": f"O acolhido foi alocado com sucesso na unidade {instituicao_desejada.nome}.",
+                    "na_fila": False
+                })
+                
+            else:
+                # Fica sem instituição, mas ganha um ticket na fila
+                acolhido.instituicao_atual = None
+                acolhido.save()
+                
+                # Cria a reserva temporária
+                ReservaVaga.objects.create(
+                    acolhido=acolhido, 
+                    instituicao=instituicao_desejada
+                )
+                
+                return Response({
+                    "status": "reserva",
+                    "mensagem": f"A unidade {instituicao_desejada.nome} está lotada. O acolhido foi colocado na fila de espera.",
+                    "na_fila": True
+                })
 
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
@@ -280,6 +328,60 @@ class InstituicaoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
             return redirect(self.get_success_url())
         else:
             return self.render_to_response(self.get_context_data(form=form))
+        
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form_endereco = context['form_endereco']
+        form_contato = context['form_contato'] # Agora isso é uma lista de formulários!
+
+        if form_endereco.is_valid() and form_contato.is_valid():
+            endereco = form_endereco.save()
+            
+            self.object = form.save(commit=False)
+            self.object.endereco = endereco
+            self.object.save()
+            
+            # COMO SALVAR O FORMSET:
+            form_contato.instance = self.object # Avisa aos contatos quem é o Pai
+            form_contato.save() # O Django salva a lista inteira no banco!
+            
+            messages.success(self.request, 'Unidade cadastrada com sucesso!')
+            return redirect(self.get_success_url())
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['form_endereco'] = EnderecoInstituicaoForm(self.request.POST)
+            
+            context['form_contato'] = ContatoInstituicaoFormSet(self.request.POST)
+        else:
+            context['form_endereco'] = EnderecoInstituicaoForm()
+            context['form_contato'] = ContatoInstituicaoFormSet()
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        form_endereco = context['form_endereco']
+        form_contato = context['form_contato'] # Agora isso é uma lista de formulários!
+
+        if form_endereco.is_valid() and form_contato.is_valid():
+            endereco = form_endereco.save()
+            
+            self.object = form.save(commit=False)
+            self.object.endereco = endereco
+            self.object.save()
+            
+            # COMO SALVAR O FORMSET:
+            form_contato.instance = self.object # Avisa aos contatos quem é o Pai
+            form_contato.save() # O Django salva a lista inteira no banco!
+            
+            messages.success(self.request, 'Unidade cadastrada com sucesso!')
+            return redirect(self.get_success_url())
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+    
 #8 - Edição de Instituições
 class InstituicaoUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
     model = Instituicao
@@ -307,6 +409,20 @@ class InstituicaoUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
             # Se for GET (apenas abriu a tela), desenhamos o form com a instância antiga
             context['form_endereco'] = EnderecoInstituicaoForm(instance=end_instance)
             context['form_contato'] = ContatoInstituicaoForm(instance=contato_instance)
+            
+        return context
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        end_instance = getattr(self.object, 'endereco', None)
+
+        if self.request.POST:
+            context['form_endereco'] = EnderecoInstituicaoForm(self.request.POST, instance=end_instance)
+            # O Formset puxa TODOS os contatos vinculados a essa Instituição
+            context['form_contato'] = ContatoInstituicaoFormSet(self.request.POST, instance=self.object)
+        else:
+            context['form_endereco'] = EnderecoInstituicaoForm(instance=end_instance)
+            context['form_contato'] = ContatoInstituicaoFormSet(instance=self.object)
             
         return context
 
