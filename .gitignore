@@ -45,3 +45,5 @@ tests/*
 
 # modulos de terceiros
 node_modules/
+*.pyc
+*.pyc
