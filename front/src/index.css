@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* Cor equivalente ao slate-300 do Tailwind */
+  border-radius: 10px;
+}

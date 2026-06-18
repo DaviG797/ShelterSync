@@ -8,10 +8,8 @@ function Unidade() {
 
   // Guarda as informações em cache ---------------------------
   const [unidade, setUnidade] = useState([])
-
   const [contPagina, setContPagina] = useState(1)
-
-  const [listaCategorizacao, setListaCategorizacao] = useState([])
+  const [categorizacaoInput, setCategorizacaoInput] = useState([])
 
   // Sistema de Paginação --------------------------------------
 
@@ -33,13 +31,27 @@ function Unidade() {
 
   // Para cadastro e edição ------------------------------------
 
-  // Formulario de cadastro
+  // Formulario de cadastro -----
+
+  // Nome
   const [nomeInput, setNomeInput] = useState('')
-  const [enderecoInput, setEnderecoInput] = useState('')
+
+  // Endereço ----
+  const [cepInput, setCepRuaInput] = useState('')
+  const [ruaInput, setRuaInput] = useState('')
+  const [bairroInput, setBairroInput] = useState('')
+  const [cidadeInput, setCidadeInput] = useState('')
+  const [estadoInput, setEstadoInput] = useState('')
+  const [NumeroEnderecoInput, setNumeroEnderecoInput] = useState('')
+
+  // Capacidade
   const [capacidadeInput, setCapacidadeInput] = useState('')
-  const [categorizacaoInput, setCategorizacaoInput] = useState('')
+
+  // CNPJ
   const [cnpjInput, setCnpjInput] = useState('')
-  const [contatoInput, setContatoInput] = useState('')
+
+  // Contato
+  const [contatoInput, setContatoInput] = useState([])
 
   const mascaraCnpj = (e) => {
     let valor = e.target.value.replace(/\D/g, '')
@@ -92,6 +104,7 @@ function Unidade() {
         return resposta.json()
       })
       .then(dados => {
+        console.log(dados.results)
         setUnidade(dados.results)
 
         setTemProxima(dados.next !== null)
@@ -124,7 +137,7 @@ function Unidade() {
     // Montamos o pacotinho de dados igual ao que o Django espera receber
     const novaUnidade = {
       nome: nomeInput,
-      endereco: enderecoInput,
+      rua: ruaInput,
       capacidade_total: capacidadeInput,
       categorizacao: categorizacaoInput,
       cnpj: cnpjPuro,
@@ -159,7 +172,7 @@ function Unidade() {
 
         // Limpamos o formulário e fechamos a janela
         setNomeInput('')
-        setEnderecoInput('')
+        setRuaInput('')
         setIsModalAberto(false)
         alert('Instituição cadastrada com sucesso!')
       })
@@ -257,7 +270,7 @@ function Unidade() {
               <h3 className="text-lg font-semibold text-gray-800">{item.nome}</h3>
               <div className='flex gap-3'>
 
-                <p className="text-sm text-gray-500">Endereço: {item.endereco}</p>
+                <p className="text-sm text-gray-500">Endereço: {item.rua}</p>
                 <div className='w-px h-4 mt-1 bg-gray-400 '></div>
                 <p className="text-sm text-gray-500">CNPJ: {item.cnpj}</p>
                 <div className='w-px h-4 mt-1 bg-gray-400 '></div>
@@ -293,114 +306,196 @@ function Unidade() {
 
       {/* 4. O MODAL DE CADASTRO (Só aparece se isModalAberto for verdadeiro) */}
       {isModalAberto && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in">
-          <div className="bg-white rounded-xl p-6 shadow-2xl w-full max-w-md mx-4 border border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Cadastrar Instituição</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in ">
 
-            <form onSubmit={enviarCadastro} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Nome da Instituição</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Abrigo Nova Vida"
-                  value={nomeInput}
-                  onChange={(e) => setNomeInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
+          <div className='w-full max-w-xl mx-2 bg-white rounded-xl shadow-2xl border border-gray-100 pr-px overflow-y-hidden'>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Endereço / Referência</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Rua Flores, Nº 123"
-                  value={enderecoInput}
-                  onChange={(e) => setEnderecoInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Capacidade</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="Ex: 50"
-                  value={capacidadeInput}
-                  onChange={(e) => setCapacidadeInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Categorização</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Idoso"
-                  value={categorizacaoInput}
-                  onChange={(e) => setCategorizacaoInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              {/* <div>
-                <select
-                  value={categorizacaoInput}
-                  onChange={(e) => setCategorizacaoInput(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>Selecione uma categoria...</option>
+            <div className=" max-h-[90vh] overflow-y-auto p-6 pr-6">
 
-                  {listaCategorias.map((cat) => (
-                    // Salvamos o 'id' no categorizacaoInput, pois o Django geralmente espera a chave estrangeira (ID)
-                    <option key={cat.id} value={cat.id}>
-                      {cat.nome}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">CNPJ</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: 00.000.000/0000-00"
-                  value={cnpjInput}
-                  onChange={mascaraCnpj}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Contato</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: (00)0 0000-0000"
-                  value={contatoInput}
-                  onChange={mascaraContato}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
+              <h2 className="text-3xl font-bold text-blue-600 mb-4">Cadastrar Instituição</h2>
+              <form onSubmit={enviarCadastro} className="space-y-4">
+
+                <div className='flex gap-3 w-full mb-3'>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 ">Nome da Instituição</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Abrigo Nova Vida"
+                      value={nomeInput}
+                      onChange={(e) => setNomeInput(e.target.value)}
+                      className="min-w-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700">Capacidade</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="Ex: 50"
+                      value={capacidadeInput}
+                      onChange={(e) => setCapacidadeInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                </div>
+
+                <div className='flex gap-3 w-full mb-3'>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700">CNPJ</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: 00.000.000/0000-00"
+                      value={cnpjInput}
+                      onChange={mascaraCnpj}
+                      className="w-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700">Categoria</label>
+                    <select
+                      className='border border-gray-300 rounded-lg h-10 w-full px-3 py-2 text-gray-700 text-sm focus:outline-none focus:border-blue-500'
+                      value={categorizacaoInput}
+                      onChange={(e) => setCategorizacaoInput(e.target.value)}
+                      required
+                    >
+                      <option value="" disabled>Selecione uma categoria...</option>
+
+                      {categorizacaoInput.map((cat) => (
+                        // Salvamos o 'id' no categorizacaoInput, pois o Django geralmente espera a chave estrangeira (ID)
+                        <option key={cat.id} value={cat.id}>
+                          {cat.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
 
-              {/* Botões de Ação do Formulário */}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalAberto(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow cursor-pointer"
-                >
-                  Salvar
-                </button>
-              </div>
-            </form>
+                <div className='flex gap-3 w-full'>
+                  <h3 className='text-lg font-bold text-gray-800 mb-4'>Endereço Completo</h3>
+                  <div className=' h-px w-full my-4 border border-gray-700'></div>
+                </div>
+                <div className='grid grid-cols-2 gap-2'>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">CEP</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: 00000-000"
+                      value={ruaInput}
+                      onChange={(e) => setRuaInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Serra Talhada"
+                      value={ruaInput}
+                      onChange={(e) => setRuaInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Bairro</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Centro"
+                      value={ruaInput}
+                      onChange={(e) => setRuaInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Logradouro</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Avenida Bezerra"
+                      value={ruaInput}
+                      onChange={(e) => setRuaInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Logradouro</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Avenida Bezerra"
+                      value={ruaInput}
+                      onChange={(e) => setRuaInput(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Número</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: 123A"
+                        value={ruaInput}
+                        onChange={(e) => setRuaInput(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Estado</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: PE"
+                        value={ruaInput}
+                        onChange={(e) => setRuaInput(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Contato</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: (00)0 0000-0000"
+                    value={contatoInput}
+                    onChange={mascaraContato}
+                    className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+
+                {/* Botões de Ação do Formulário */}
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalAberto(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow cursor-pointer"
+                  >
+                    Salvar
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
+
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import re
 from rest_framework import serializers
 from .models import Acolhido, Documentacao, Endereco_Acolhido
-from .models import Instituicao, Categoria, Endereco_Instituicao,  Contato_Instituicao
+from .models import Instituicao, Categoria, Endereco_Instituicao,  Contato_Instituicao, ReservaVaga
 
 def cpf_e_valido(cpf):
     cpf = re.sub(r'\D', '', str(cpf))
@@ -108,6 +108,47 @@ class ContatoInstituicaoSerializer(serializers.ModelSerializer):
         # Não colocamos a 'instituicao' aqui, pois o Django vai preencher isso sozinho
         fields = ['id', 'tipo', 'valor']
 
+class InstituicaoResumoSerializer(serializers.ModelSerializer):
+
+    vagas_disponiveis = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Instituicao
+        fields =[
+            'id','nome', 'cnpj', 'capacidade_total',
+            'vagas_disponiveis', 'categorizacao', 'ativo'
+        ]
+
+class InstituicaoReservaSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Instituicao
+        fields =[
+            'id','nome', 'categorizacao'
+        ]
+
+class ReservaSerializer(serializers.ModelSerializer):
+
+    acolhidos = AcolhidoResumoSerializer(read_only=True)
+
+    instituicao = InstituicaoReservaSerializer(read_only=True)
+
+    class Meta:
+        model = ReservaVaga
+        fields = [
+            'id', 'acolhido', 'data_solicitacao', 'instituicao'
+        ]
+
+class ReservaResumoSerializer(serializers.ModelSerializer):
+
+    acolhido = AcolhidoResumoSerializer(read_only=True)
+
+    class Meta:
+        model = ReservaVaga
+        fields =[
+            'id', 'acolhido', 'data_solicitacao'
+        ]
+
 class InstituicaoSerializer(serializers.ModelSerializer):
     # 1 para 1: Um único objeto de endereço
     endereco = EnderecoInstituicaoSerializer()
@@ -122,11 +163,13 @@ class InstituicaoSerializer(serializers.ModelSerializer):
 
     vagas_disponiveis = serializers.ReadOnlyField()
 
+    fila_espera = ReservaResumoSerializer(many=True, read_only=True)
+
     class Meta:
         model = Instituicao
         fields = [
             'id', 'nome', 'cnpj', 'capacidade_total', 'vagas_disponiveis', 'ativo', 
-            'categorizacao', 'nome_categoria', 'endereco', 'contato', 'acolhidos'
+            'categorizacao', 'nome_categoria', 'endereco', 'contato', 'acolhidos', 'fila_espera'
         ]
 
     # A MÁGICA: Salvando em 3 tabelas diferentes ao mesmo tempo
@@ -154,14 +197,3 @@ class InstituicaoSerializer(serializers.ModelSerializer):
             )
 
         return instituicao
-    
-class InstituicaoResumoSerializer(serializers.ModelSerializer):
-
-    vagas_disponiveis = serializers.ReadOnlyField()
-
-    class Meta:
-        model = Instituicao
-        fields =[
-            'id','nome', 'cnpj', 'capacidade_total',
-            'vagas_disponiveis', 'categoria', 'ativo'
-        ]

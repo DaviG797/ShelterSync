@@ -6,7 +6,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views as token_views
 
-from vagas.views import InstituicaoViewSet, AcolhidoViewSet, CategoriaViewSet, CategoriaCreateView
+from vagas.views import InstituicaoViewSet, AcolhidoViewSet, CategoriaViewSet, CategoriaCreateView, ReservasViewSet
 
 from django.contrib.auth import views as auth_views
 from vagas.views import (
@@ -18,7 +18,8 @@ from vagas.views import (
 router = DefaultRouter()
 router.register(r'instituicoes-api', InstituicaoViewSet, basename='instituicao')
 router.register(r'acolhidos-api', AcolhidoViewSet, basename='acolhido')
-router.register(r'categorias', CategoriaViewSet, basename='categoria')
+router.register(r'categoria-api', CategoriaViewSet, basename='categoria')
+router.register(r'reserva-api', ReservasViewSet, basename='reserva')
 
 urlpatterns = [
     # Rota padrão do painel de administração

@@ -17,8 +17,8 @@ from rest_framework.response import Response
 # Importações das informações do/para o banco
 from .forms import InstituicaoForm, AcolhidoForm, DocumentacaoForm, EnderecoForm, InstituicaoForm, EnderecoInstituicaoForm, ContatoInstituicaoForm, CategoriaForm, ContatoInstituicaoFormSet
 from .models import Acolhido, Instituicao, Categoria, ReservaVaga
-from .serializers import InstituicaoSerializer, AcolhidoSerializer, CategoriaSerializer
-from .serializers import InstituicaoResumoSerializer, AcolhidoResumoSerializer
+from .serializers import InstituicaoSerializer, AcolhidoSerializer, CategoriaSerializer, ReservaSerializer
+from .serializers import InstituicaoResumoSerializer, AcolhidoResumoSerializer, ReservaResumoSerializer
 
 # Para segurança------------------------------------------------------
 class GroupRequiredMixin(UserPassesTestMixin):
@@ -55,7 +55,6 @@ class InstituicaoViewSet(viewsets.ModelViewSet):
     # Filtros de Busca 
     filter_backends = [filters.SearchFilter]
     search_fields = ['^nome', 'cnpj']
-
 
 class AcolhidoViewSet(viewsets.ModelViewSet):
    
@@ -124,10 +123,6 @@ class AcolhidoViewSet(viewsets.ModelViewSet):
                     "mensagem": f"A unidade {instituicao_desejada.nome} está lotada. O acolhido foi colocado na fila de espera.",
                     "na_fila": True
                 })
-
-class CategoriaViewSet(viewsets.ModelViewSet):
-    queryset = Categoria.objects.all()
-    serializer_class = CategoriaSerializer
 
 # CRUD PARA ACOLHIDO--------------------------------------------------------
 
@@ -469,18 +464,18 @@ class InstituicaoInativacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateVi
 
     # Mesma ideia do acolhido, mas com a validação adicional para verificar se existem acolhidos ativos vinculados à instituição.
     def post(self, request, *args, **kwargs):
-            self.object = self.get_object()
+        self.object = self.get_object()
 
-            vagas_ocupadas = Acolhido.objects.filter(instituicao_atual=self.object, ativo=True).count()
-            if vagas_ocupadas > 0:
-                messages.error(request, f'Não é possível inativar a instituição "{self.object.nome}", pois existem {vagas_ocupadas} acolhidos ativos vinculados a ela.')
-                return redirect('instituicao_list')
-            # faz a inativação
-            self.object.ativo = False
-            self.object.save()
-
-            messages.success(request, f'Instituição "{self.object.nome}" inativada com sucesso.')
+        vagas_ocupadas = Acolhido.objects.filter(instituicao_atual=self.object, ativo=True).count()
+        if vagas_ocupadas > 0:
+            messages.error(request, f'Não é possível inativar a instituição "{self.object.nome}", pois existem {vagas_ocupadas} acolhidos ativos vinculados a ela.')
             return redirect('instituicao_list')
+        # faz a inativação
+        self.object.ativo = False
+        self.object.save()
+
+        messages.success(request, f'Instituição "{self.object.nome}" inativada com sucesso.')
+        return redirect('instituicao_list')
 
 #10 - Reativação de Instituições
 class InstituicaoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
@@ -502,6 +497,7 @@ class InstituicaoAtivacaoView(LoginRequiredMixin, GroupRequiredMixin, UpdateView
         messages.success(request, f'Instituição "{self.object.nome}" reativada com sucesso!')
         return redirect('instituicao_list')
 
+#11 - Categorias das instituições
 class CategoriaCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     model = Categoria
     form_class = CategoriaForm
@@ -512,3 +508,23 @@ class CategoriaCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     def form_valid(self, form):
         messages.success(self.request, 'Nova categoria institucional cadastrada com sucesso!')
         return super().form_valid(form)
+    
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+
+#12 - Reservas
+class ReservasViewSet(viewsets.ModelViewSet):
+    queryset = ReservaVaga.objects.all().order_by('data_solicitacao')
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def get_serializer_class(self):
+        
+        # Ação 'list'
+        if self.action == 'list':
+            return ReservaResumoSerializer 
+            
+        # Ação 'retrieve'
+        return ReservaSerializer 
+        
