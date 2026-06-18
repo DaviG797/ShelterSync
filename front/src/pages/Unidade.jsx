@@ -140,11 +140,6 @@ function Unidade() {
 
   const realizarBusca = (termoPesquisar, pagina = 1) => {
 
-<<<<<<< HEAD
-
-  useEffect(() => {
-=======
->>>>>>> ed0c52a86cdb91605d6db735e1219f10f6a43a7d
     const token = sessionStorage.getItem('token')
 
     setBuscaAtual(termoPesquisar)
