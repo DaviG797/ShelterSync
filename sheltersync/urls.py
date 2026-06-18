@@ -18,7 +18,7 @@ from vagas.views import (
 router = DefaultRouter()
 router.register(r'instituicoes-api', InstituicaoViewSet, basename='instituicao')
 router.register(r'acolhidos-api', AcolhidoViewSet, basename='acolhido')
-router.register(r'categoria-api', CategoriaViewSet, basename='categoria')
+router.register(r'categorias-api', CategoriaViewSet, basename='categoria')
 router.register(r'reserva-api', ReservasViewSet, basename='reserva')
 
 urlpatterns = [

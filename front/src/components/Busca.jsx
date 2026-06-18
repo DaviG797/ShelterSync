@@ -1,15 +1,11 @@
 import { useState, useRef } from 'react'
 
-export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..." }) {
+// Adicionamos a prop 'campoFiltro' que por padrão busca por 'nome'
+export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar...", campoFiltro = "nome" }) {
 
-    // Para Controlar o que o usuário digita no campo de busca
     const [busca, setBusca] = useState('')
-
-    // Caixa de Sugestões de busca
     const [sugestoes, setSugestoes] = useState([])
     const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
-
-    // Usamos useRef para guardar o cronômetro do Debounce sem causar re-renderizações
     const debounceTimer = useRef(null)
 
     const autoComplete = (e) => {
@@ -27,14 +23,19 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
         debounceTimer.current = setTimeout(() => {
             const token = sessionStorage.getItem('token')
 
-            // Usamos a variável apiEndpoint que veio do Pai!
             fetch(`${apiEndpoint}?search=${valor}`, {
                 headers: { 'Authorization': `Token ${token}` }
             })
                 .then(res => res.json())
                 .then(dados => {
-                    const sugestoesUnicas = dados.results.filter((item, index, arrayCompleto) =>
-                        index === arrayCompleto.findIndex((t) => t.nome.toLowerCase() === item.nome.toLowerCase())
+                    // Garantimos que dados.results existe antes de fazer o filtro para não quebrar o front
+                    const listaResultados = dados.results ? dados.results : [];
+
+                    // Usamos o colchete [campoFiltro] para tornar a busca dinâmica!
+                    const sugestoesUnicas = listaResultados.filter((item, index, arrayCompleto) =>
+                        index === arrayCompleto.findIndex((t) => 
+                            String(t[campoFiltro]).toLowerCase() === String(item[campoFiltro]).toLowerCase()
+                        )
                     )
                     setSugestoes(sugestoesUnicas)
                     setMostrarSugestoes(true)
@@ -46,14 +47,12 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
     const lidarComEnvioBusca = (e) => {
         e.preventDefault()
         setMostrarSugestoes(false)
-
         onBuscar(busca)
     }
 
     const selecionarSugestao = (nome) => {
         setBusca(nome)
         setMostrarSugestoes(false)
-
         onBuscar(nome)
     }
 
@@ -61,14 +60,12 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
         setBusca('')
         setSugestoes([])
         setMostrarSugestoes(false)
-
         if(debounceTimer.current) clearTimeout(debounceTimer.current)
-
         onBuscar('')
     }
 
     return (
-        <form onSubmit={lidarComEnvioBusca} className="relative flex items-center w-full md:w-auto rounded-lg border border-gray-300 ">
+        <form onSubmit={lidarComEnvioBusca} className="relative flex items-center w-full md:w-auto rounded-lg border border-gray-300 bg-white">
             <div className="relative w-full md:w-65 ">
                 <input
                     type="text"
@@ -76,8 +73,8 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
                     value={busca}
                     onChange={autoComplete}
                     onBlur={() => setTimeout(() => setMostrarSugestoes(false), 200)}
-                    onFocus={() => sugestoes.length > 0 && setMostrarSugestoes(true)}
-                    className="w-full pl-10 pr-10 py-2   focus:outline-none focus:ring-2 focus:ring-blue-300 focus:rounded-l-lg"
+                    onFocus={() => { if (sugestoes.length > 0) setMostrarSugestoes(true) }}
+                    className="w-full pl-10 pr-12 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:rounded-l-lg"
                 />
 
                 {/* Ícone Lupa */}
@@ -85,9 +82,10 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
 
-                {/* Botão X*/}
+                {/* Botão X */}
                 {busca.length > 0 && (
                     <button
+                        type="button" // Evita que o "X" envie o formulário por acidente
                         onClick={() => limparBusca()}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1 rounded-full hover:bg-gray-100 transition-colors"
                         title="Limpar busca"
@@ -97,30 +95,29 @@ export default function Busca({ onBuscar, apiEndpoint, placeholder = "Buscar..."
                         </svg>
                     </button>
                 )}
+                
+                {/* Lista de Sugestões */}
                 {mostrarSugestoes && sugestoes.length > 0 && (
                     <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {sugestoes.map((item) => (
                             <li
                                 key={item.id}
-                                onMouseDown={() => selecionarSugestao(item.nome)}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-gray-700"
+                                onMouseDown={() => selecionarSugestao(item[campoFiltro])}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 text-gray-700 text-sm"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                {item.nome}
+                                {item[campoFiltro]}
                             </li>
                         ))}
                     </ul>
                 )}
             </div>
 
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-[15px] py-2 px-2 transition-colors rounded-r-lg border border-gray-300">
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-[15px] py-2 px-4 transition-colors rounded-r-lg border-l border-gray-300">
                 Buscar
             </button>
         </form>
-
     )
 }
-
-
