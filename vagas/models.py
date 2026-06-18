@@ -240,9 +240,9 @@ def fechar_historico_antigo(sender, instance, **kwargs):
 @receiver(post_save, sender=Acolhido)
 def criar_novo_historico(sender, instance, created, **kwargs):
 
-    # Se ele foi alocado em uma instituição (seja um cadastro novo ou transferência)
+    # Se ele foi alocado em uma instituição
     if instance.instituicao_atual:
-        # Verifica se já não existe um histórico em aberto para ele nesse mesmo abrigo (evita duplicação)
+        # Verifica se já não existe um histórico em aberto para ele nesse mesmo abrigo
         historico_aberto_existe = HistoricoAcolhimento.objects.filter(
             acolhido=instance,
             instituicao=instance.instituicao_atual,
@@ -256,6 +256,58 @@ def criar_novo_historico(sender, instance, created, **kwargs):
                 instituicao=instance.instituicao_atual,
                 data_entrada=timezone.now()
             )
+
+
+
+# Modelo para o Histórico da Instituição
+class HistoricoInstituicao(models.Model):
+    instituicao = models.ForeignKey(
+        Instituicao,
+        on_delete=models.CASCADE,
+        related_name='historico_alteracoes'
+    )
+
+    # Registra o que mudou
+    capacidade_anterior = models.PositiveIntegerField(null=True, blank=True)
+    capacidade_nova = models.PositiveIntegerField()
+
+    status_anterior = models.BooleanField(null=True, blank=True)
+    status_novo = models.BooleanField()
+
+    # Data exata em que a mudança ocorreu
+    data_alteracao = models.DateTimeField(default=timezone.now)
+
+    #"Aumento de vagas" ou "Instituição temporariamente fechada"
+    motivo_alteracao = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return f"Alteração em {self.instituicao.nome} - {self.data_alteracao.strftime('%d/%m/%Y')}"
+
+
+# ANTES DE SALVAR (Verifica o que mudou na instituição e gera o registro)
+@receiver(pre_save, sender=Instituicao)
+def registrar_historico_instituicao(sender, instance, **kwargs):
+    if instance.pk:  # Verifica se a instituição já existe no banco (não é um cadastro novo)
+        try:
+            # Busca os dados antigos da instituição antes de salvar a nova versão
+            instituicao_antiga = sender.objects.get(pk=instance.pk)
+
+            # Verifica se a capacidade de vagas OU o status (ativo/inativo) mudaram
+            mudou_capacidade = instituicao_antiga.capacidade_vagas != instance.capacidade_vagas
+            mudou_status = instituicao_antiga.ativo != instance.ativo
+
+            if mudou_capacidade or mudou_status:
+                # Cria a linha do tempo relatando a mudança
+                HistoricoInstituicao.objects.create(
+                    instituicao=instance,
+                    capacidade_anterior=instituicao_antiga.capacidade_vagas,
+                    capacidade_nova=instance.capacidade_vagas,
+                    status_anterior=instituicao_antiga.ativo,
+                    status_novo=instance.ativo,
+                    motivo_alteracao="Atualização de cadastro (Capacidade/Status)"
+                )
+        except sender.DoesNotExist:
+            pass
 
 @receiver(pre_save, sender=Acolhido)
 def processar_fila_de_espera(sender, instance, **kwargs):
