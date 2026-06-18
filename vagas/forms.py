@@ -12,16 +12,6 @@ class CategoriaForm(forms.ModelForm):
             'descricao': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Breve descrição do perfil de atendimento...'}),
         }
 
-class AcolhidoForm(forms.ModelForm):
-    class Meta:
-        model = Acolhido
-        fields = '__all__'
-
-class InstituicaoForm(forms.ModelForm):
-    class Meta:
-        model = Instituicao
-        fields = '__all__'
-
 class DocumentacaoForm(forms.ModelForm):
     class Meta:
         model = Documentacao

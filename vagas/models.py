@@ -3,8 +3,8 @@ from django.db.models import Q
 
 class Categoria(models.Model):
 
-    nome = models.CharField(max_length=50) #Nome da categoria
-    descricao = models.TextField(blank=True) #Descrição da categoria em texto longo
+    nome = models.CharField(max_length=50, unique=True ) # Nome da categoria
+    descricao = models.TextField(blank=True) # Descrição da categoria em texto longo
 
     def __str__(self):
         return self.nome
@@ -34,7 +34,6 @@ class Instituicao(models.Model):
     categorizacao = models.ForeignKey(
         Categoria, 
         on_delete=models.SET_NULL,
-        unique=True,
         null=True, 
         blank=True,
         related_name='instituicoes'
@@ -42,7 +41,15 @@ class Instituicao(models.Model):
     cnpj = models.CharField(max_length=18, unique=True) # D-16 + RN-10 ("unique" garante CNPJ único)
     ativo = models.BooleanField(default=True) # RF-07 (Inativar instituicao)
 
-    def __str__(self): #Retorna o nome da instituicao para não mostrar "instituicao object (1)" no admin.
+    @property
+    def vagas_disponiveis(self): # Retorna a quantidade de vagas restantes em tempo real
+        ocupadas = self.acolhidos.filter(ativo=True).count()
+
+        vagas = self.capacidade_total - ocupadas
+
+        return vagas if vagas > 0 else 0
+
+    def __str__(self): # Retorna o nome da instituicao para não mostrar "instituicao object (1)" no admin.
         return self.nome
     
 class Contato_Instituicao(models.Model): # D-17
@@ -68,12 +75,13 @@ class Documentacao(models.Model):
     ]
     
     tipo = models.CharField(max_length=10, choices=TIPO_DOC_CHOICES)
-    # Guarda apenas os números puros do documento
-    numero = models.CharField(max_length=20, blank=True, null=True) 
-    # Só será preenchida se o tipo for 'SEM_DOC'
-    justificativa = models.TextField(blank=True, null=True)
+    
+    numero = models.CharField(max_length=20, blank=True, null=True) # Guarda apenas os números puros do documento
+    
+    justificativa = models.TextField(blank=True, null=True) # Só será preenchida se o tipo for 'SEM_DOC'
 
     class Meta:
+
         # Aplicando regras de indice unico
         constraints = [
             models.UniqueConstraint(
@@ -90,6 +98,7 @@ class Documentacao(models.Model):
         return f"{self.tipo}: {self.numero if self.numero else 'Sem documento'}"
     
 class Endereco_Acolhido(models.Model):
+
     # Se for True, significa que é morador de rua
     situacao_rua = models.BooleanField(default=False) 
     

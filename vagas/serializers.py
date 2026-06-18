@@ -86,6 +86,12 @@ class AcolhidoSerializer(serializers.ModelSerializer):
 
         return acolhido
     
+class AcolhidoResumoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Acolhido
+        fields = ['id', 'nome', 'genero', 'data_nascimento', 'ativo']
+
+# Serializer Instituição -------------------------------------------------
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
@@ -107,17 +113,20 @@ class InstituicaoSerializer(serializers.ModelSerializer):
     endereco = EnderecoInstituicaoSerializer()
     
     # 1 para N: Uma LISTA de contatos (Atenção ao many=True)
-    # Usamos 'contato' porque foi esse o related_name que você definiu no models.py
     contato = ContatoInstituicaoSerializer(many=True, required=False) 
     
     # Campo extra de leitura para o React mostrar o nome bonito da categoria nos cartões
     nome_categoria = serializers.CharField(source='categorizacao.nome', read_only=True)
 
+    acolhidos = AcolhidoResumoSerializer(many=True, read_only=True)
+
+    vagas_disponiveis = serializers.ReadOnlyField()
+
     class Meta:
         model = Instituicao
         fields = [
-            'id', 'nome', 'cnpj', 'capacidade_total', 'ativo', 
-            'categorizacao', 'nome_categoria', 'endereco', 'contato'
+            'id', 'nome', 'cnpj', 'capacidade_total', 'vagas_disponiveis', 'ativo', 
+            'categorizacao', 'nome_categoria', 'endereco', 'contato', 'acolhidos'
         ]
 
     # A MÁGICA: Salvando em 3 tabelas diferentes ao mesmo tempo
@@ -145,3 +154,14 @@ class InstituicaoSerializer(serializers.ModelSerializer):
             )
 
         return instituicao
+    
+class InstituicaoResumoSerializer(serializers.ModelSerializer):
+
+    vagas_disponiveis = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Instituicao
+        fields =[
+            'id','nome', 'cnpj', 'capacidade_total',
+            'vagas_disponiveis', 'categoria', 'ativo'
+        ]

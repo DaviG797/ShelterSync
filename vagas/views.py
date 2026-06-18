@@ -1,19 +1,21 @@
+
+# importações do Django
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpResponseRedirect 
 
-from rest_framework import viewsets, generics, filters
+# Importações do rest_framework
+from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
-from .forms import InstituicaoForm
+# Importações das informações do/para o banco
+from .forms import InstituicaoForm, AcolhidoForm, DocumentacaoForm, EnderecoForm, InstituicaoForm, EnderecoInstituicaoForm, ContatoInstituicaoForm, CategoriaForm
 from .models import Acolhido, Instituicao, Categoria
 from .serializers import InstituicaoSerializer, AcolhidoSerializer, CategoriaSerializer
-from .forms import AcolhidoForm, DocumentacaoForm, EnderecoForm, InstituicaoForm, EnderecoInstituicaoForm, ContatoInstituicaoForm, CategoriaForm
-
+from .serializers import InstituicaoResumoSerializer, AcolhidoResumoSerializer
 
 # Para segurança------------------------------------------------------
 class GroupRequiredMixin(UserPassesTestMixin):
@@ -31,9 +33,21 @@ class GroupRequiredMixin(UserPassesTestMixin):
 class InstituicaoViewSet(viewsets.ModelViewSet):
    
     queryset = Instituicao.objects.all()
-    serializer_class = InstituicaoSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+
+    def get_serializer_class(self):
+        
+        # Ação 'list' acontece quando a URL é geral: GET /api/instituicao/
+        if self.action == 'list':
+            return InstituicaoResumoSerializer # Retorna os cards leves
+            
+        # Ação 'retrieve' acontece quando a URL tem um ID: GET /api/instituicao/101/
+        elif self.action == 'retrieve':
+            return InstituicaoSerializer # Retorna a ficha médica e dados completos
+            
+        # Para criar (POST) ou editar (PUT/PATCH), geralmente usamos o completo
+        return InstituicaoSerializer
     
     # Filtros de Busca 
     filter_backends = [filters.SearchFilter]
@@ -43,9 +57,21 @@ class InstituicaoViewSet(viewsets.ModelViewSet):
 class AcolhidoViewSet(viewsets.ModelViewSet):
    
     queryset = Acolhido.objects.all()
-    serializer_class = AcolhidoSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+
+    def get_serializer_class(self):
+        
+        # Ação 'list' acontece quando a URL é geral: GET /api/acolhidos/
+        if self.action == 'list':
+            return AcolhidoResumoSerializer # Retorna os cards leves
+            
+        # Ação 'retrieve' acontece quando a URL tem um ID: GET /api/acolhidos/101/
+        elif self.action == 'retrieve':
+            return AcolhidoSerializer # Retorna a ficha médica e dados completos
+            
+        # Para criar (POST) ou editar (PUT/PATCH), geralmente usamos o completo
+        return AcolhidoSerializer
 
     # Filtros de Busca 
     filter_backends = [filters.SearchFilter]
@@ -56,6 +82,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
 
 # CRUD PARA ACOLHIDO--------------------------------------------------------
+
 #1 - Listagem de Acolhidos
 class AcolhidoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
     model = Acolhido
@@ -63,7 +90,7 @@ class AcolhidoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
     context_object_name = 'acolhidos'
     allowed_groups = ['Assistente de Campo', 'Secretaria Social']
     
-    # filtro RF08
+    # Filtro RF-08
     def get_queryset(self):
         nome_filtro = self.request.GET.get('nome')
         if nome_filtro:
@@ -78,7 +105,7 @@ class AcolhidoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
     success_url = reverse_lazy('acolhido_list')
     allowed_groups = ['Assistente de Campo', 'Secretaria Social']
 
-    # 1. Enviamos os 3 formulários para o HTML
+    # Os 3 formulários para o HTML
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
@@ -89,7 +116,7 @@ class AcolhidoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):
             context['form_endereco'] = EnderecoForm()
         return context
 
-    # 2. Interceptamos o momento de salvar
+    # Salva as informações do forms
     def form_valid(self, form):
         context = self.get_context_data()
         form_documentacao = context['form_documentacao']
@@ -143,7 +170,8 @@ class AcolhidoUpdateView(LoginRequiredMixin, GroupRequiredMixin, UpdateView):
         form_endereco = context['form_endereco']
 
         if form_documentacao.is_valid() and form_endereco.is_valid():
-            # Aqui é mais simples: como as instâncias já existem, o save() vai dar um UPDATE no banco
+
+            # Update no banco
             doc_obj = form_documentacao.save()
             end_obj = form_endereco.save()
             
@@ -209,6 +237,7 @@ class InstituicaoListView(LoginRequiredMixin, GroupRequiredMixin, ListView):
         if nome_filtro:
             return Instituicao.objects.filter(nome__icontains=nome_filtro)
         return Instituicao._base_manager.all()
+    
     
 #7 - Criação de Instituições
 class InstituicaoCreateView(LoginRequiredMixin, GroupRequiredMixin, CreateView):

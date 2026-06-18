@@ -45,3 +45,4 @@ tests/*
 
 # modulos de terceiros
 node_modules/
+.vscode/
